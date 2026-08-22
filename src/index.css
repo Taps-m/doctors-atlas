@@ -1,0 +1,19 @@
+/* index.css
+   Global reset only. All Dashboard-specific styling lives in
+   src/components/Dashboard/Dashboard.css, scoped under .atlas. */
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
