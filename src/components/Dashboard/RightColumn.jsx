@@ -3,16 +3,14 @@ import { ChevronRight, ArrowDown, ArrowUp } from "lucide-react";
 import { getIcon } from "./iconMap";
 import { testimonial, repeatVisitsSummary, howItWorksSteps } from "./data";
 
-function TestimonialCard() {
+function ProfileCard({ avatarUrl, name }) {
   return (
     <div>
       <div className="hero-card">
-        <img src={testimonial.imageUrl} alt="Doctor using Atlas" />
+        <img src={avatarUrl || testimonial.imageUrl} alt={name || "Your profile photo"} />
       </div>
-      <div className="quote-card">
-        <div className="quote-card__mark">"</div>
-        {testimonial.quote}
-        <cite>— {testimonial.author}</cite>
+      <div className="quote-card" style={{ textAlign: "center" }}>
+        {name || "Your Profile"}
       </div>
     </div>
   );
@@ -66,12 +64,12 @@ function HowItWorks() {
 
 /**
  * RightColumn
- * Testimonial, repeat-visits shortcut, and the How-It-Works explainer.
+ * Profile photo, repeat-visits shortcut, and the How-It-Works explainer.
  */
-export default function RightColumn() {
+export default function RightColumn({ userAvatar, userName }) {
   return (
     <div className="right-col">
-      <TestimonialCard />
+      <ProfileCard avatarUrl={userAvatar} name={userName} />
       <RepeatVisitsCard />
       <HowItWorks />
     </div>

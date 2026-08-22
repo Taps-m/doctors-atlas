@@ -71,8 +71,7 @@ export default function Dashboard({
           </footer>
         </div>
 
-        <RightColumn />
-      </main>
+        <RightColumn userAvatar={userAvatar} userName={userName} />      </main>
     </div>
   );
 }
