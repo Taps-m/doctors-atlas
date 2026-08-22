@@ -45,6 +45,17 @@ export default function Dashboard({
             onDismissAction={onDismissAction}
           />
           <AdvisorBar onAsk={onAskAdvisor} />
+
+          <footer className="atlas-footer">
+            © {new Date().getFullYear()} Doctors Atlas · Built by{" "}
+            
+              href="https://twitter.com/Tapomoy-M"
+              target="_blank"
+              rel="noreferrer"
+            >
+              @Tapomoy-M
+            </a>
+          </footer>
         </div>
 
         <RightColumn />
