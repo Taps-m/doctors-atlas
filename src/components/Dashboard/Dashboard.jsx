@@ -27,6 +27,7 @@ export default function Dashboard({
   liveStats,
   advisorAnswer,
   userName,
+  userAvatar,
 }) {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
@@ -43,6 +44,7 @@ export default function Dashboard({
         <div className="main-col">
           <TopBar
             userName={userName || "Doctor"}
+            userAvatar={userAvatar}
             onMenuClick={() => setSidebarOpen(true)}
           />
           <StatsRow liveStats={liveStats} />

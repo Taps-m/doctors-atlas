@@ -16,7 +16,7 @@ function greeting() {
   if (hour < 17) return "Good afternoon";
   return "Good evening";
 }
-export default function TopBar({ userName = "Dr. Ananya", onMenuClick }) {
+export default function TopBar({ userName = "Dr. Ananya", userAvatar, onMenuClick }) {
   return (
     <div className="topbar">
       <div className="topbar__left">
@@ -51,7 +51,7 @@ export default function TopBar({ userName = "Dr. Ananya", onMenuClick }) {
         </button>
 
         <div className="doc-pill">
-          <img src={currentUser.avatarUrl} alt={userName} />
+          <img src={userAvatar || currentUser.avatarUrl} alt={userName} />
           <span className="doc-pill__name">{userName}</span>
           <ChevronDown size={14} color="#6b7a90" />
         </div>

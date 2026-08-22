@@ -113,6 +113,7 @@ export default function App() {
         liveStats={liveStats}
         advisorAnswer={advisorAnswer}
         userName={user?.name || "Doctor"}
+        userAvatar={user?.avatar_url}
       />
       <div style={{ textAlign: "center", padding: 12 }}>
         <button onClick={handleLogout} style={backLinkStyle}>

@@ -43,12 +43,16 @@ async function request(path, { method = "GET", body, form = false, auth = true }
 
 export const api = {
   // ---------- Auth ----------
-  async register({ name, email, password, role = "doctor", clinicName }) {
+    async register({ name, email, password, role = "doctor", clinicName, avatarUrl }) {
     const data = await request("/auth/register", {
       method: "POST",
-      body: { name, email, password, role, clinic_name: clinicName },
+      body: { name, email, password, role, clinic_name: clinicName, avatar_url: avatarUrl },
     });
     setToken(data.access_token);
+    return data;
+  },
+  
+  setToken(data.access_token);
     return data;
   },
 
