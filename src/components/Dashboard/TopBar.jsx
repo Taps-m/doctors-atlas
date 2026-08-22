@@ -9,6 +9,13 @@ import { currentUser } from "./data";
  * phone widths; `onMenuClick` (wired by <Dashboard>) shows a hamburger
  * button below the tablet breakpoint to open the off-canvas sidebar.
  */
+
+function greeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
 export default function TopBar({ userName = "Dr. Ananya", onMenuClick }) {
   return (
     <div className="topbar">
@@ -23,7 +30,7 @@ export default function TopBar({ userName = "Dr. Ananya", onMenuClick }) {
         </button>
 
         <div className="greeting">
-          <h1>Good morning, {userName} 👋</h1>
+                    <h1>{greeting()}, {userName} 👋</h1>
           <p>Here's what's happening in your practice.</p>
         </div>
       </div>
