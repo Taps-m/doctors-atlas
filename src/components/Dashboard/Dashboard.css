@@ -1298,3 +1298,18 @@
     padding: 6px 4px 0;
   }
 }
+
+
+.advisor-answer {
+  background: var(--atlas-teal-light);
+  border: 1px solid var(--atlas-teal);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--atlas-ink);
+}
+
+.advisor-answer strong {
+  color: var(--atlas-teal);
+}

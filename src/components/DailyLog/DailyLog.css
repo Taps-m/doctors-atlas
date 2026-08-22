@@ -1,0 +1,178 @@
+.dlog {
+  max-width: 460px;
+  margin: 0 auto;
+}
+
+.dlog__greeting h2 {
+  margin: 0 0 4px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #10233d;
+}
+
+.dlog__greeting p {
+  margin: 0 0 16px;
+  color: #6b7a90;
+  font-size: 13.5px;
+}
+
+.dlog__date {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid #e7ebf1;
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #6a5cf0;
+  margin-bottom: 16px;
+  width: fit-content;
+}
+
+.dlog__date-main {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #10233d;
+}
+
+.dlog__date-sub {
+  font-size: 11.5px;
+  color: #6b7a90;
+}
+
+.dlog__card {
+  background: #fff;
+  border: 1px solid #e7ebf1;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.dlog__card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.dlog__card-head h3 {
+  margin: 0 0 2px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #6a5cf0;
+}
+
+.dlog__card-head p {
+  margin: 0;
+  font-size: 12.5px;
+  color: #6b7a90;
+}
+
+.dlog__timer {
+  background: #efeeff;
+  color: #6a5cf0;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.dlog__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f4f6fa;
+}
+
+.dlog__row:last-of-type {
+  border-bottom: none;
+}
+
+.dlog__row-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dlog__row-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dlog__row-label {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #10233d;
+}
+
+.dlog__row-sub {
+  font-size: 11.5px;
+  color: #6b7a90;
+}
+
+.dlog__row input {
+  width: 88px;
+  flex-shrink: 0;
+  padding: 9px 10px;
+  border: 1px solid #e7ebf1;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  text-align: right;
+}
+
+.dlog button[type="submit"] {
+  margin-top: 18px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #6a5cf0;
+  color: #fff;
+  border: none;
+  padding: 13px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.dlog button[type="submit"]:hover {
+  background: #5847d6;
+}
+
+.dlog button[type="submit"]:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.dlog__done {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+  background: #f4f2ff;
+  color: #6a5cf0;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.dlog__error {
+  margin-top: 12px;
+  background: #fdecec;
+  color: #b3272c;
+  font-size: 12.5px;
+  padding: 8px 10px;
+  border-radius: 8px;
+}

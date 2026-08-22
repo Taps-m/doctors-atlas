@@ -25,6 +25,7 @@ export const attentionData = [30, 34, 28, 32, 25, 29, 22, 24, 18, 16, 14, 12].ma
 
 export const navItems = [
   { id: "dashboard", label: "Dashboard", icon: "Home", active: true },
+  { id: "daily-log", label: "Daily Log", icon: "ClipboardList" },
   { id: "patients", label: "Patients", icon: "Users" },
   { id: "appointments", label: "Appointments", icon: "Calendar" },
   { id: "insights", label: "Insights", icon: "BarChart2" },

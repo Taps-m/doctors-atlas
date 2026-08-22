@@ -1,4 +1,4 @@
-// iconMap.js
+// iconMap.jsx
 // Maps plain string keys (used in data.js) to actual lucide-react icon
 // components. Keeping this separate means data.js stays framework-agnostic
 // (plain serializable data only - safe to fetch from an API later).
@@ -18,6 +18,7 @@ import {
   Search,
   Lightbulb,
   Target,
+  ClipboardList,
 } from "lucide-react";
 
 const Rupee = (props) => (
@@ -42,6 +43,7 @@ export const ICONS = {
   Lightbulb,
   Target,
   Rupee,
+  ClipboardList,
 };
 
 export function getIcon(name) {
