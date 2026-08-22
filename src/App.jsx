@@ -112,6 +112,7 @@ export default function App() {
         onAskAdvisor={handleAskAdvisor}
         liveStats={liveStats}
         advisorAnswer={advisorAnswer}
+        userName={user?.name || "Doctor"}
       />
       <div style={{ textAlign: "center", padding: 12 }}>
         <button onClick={handleLogout} style={backLinkStyle}>

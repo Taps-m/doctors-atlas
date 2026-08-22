@@ -44,8 +44,8 @@ export default function TopBar({ userName = "Dr. Ananya", onMenuClick }) {
         </button>
 
         <div className="doc-pill">
-          <img src={currentUser.avatarUrl} alt={currentUser.name} />
-          <span className="doc-pill__name">{currentUser.name}</span>
+          <img src={currentUser.avatarUrl} alt={userName} />
+          <span className="doc-pill__name">{userName}</span>
           <ChevronDown size={14} color="#6b7a90" />
         </div>
       </div>

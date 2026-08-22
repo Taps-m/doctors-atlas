@@ -26,6 +26,7 @@ export default function Dashboard({
   onAskAdvisor,
   liveStats,
   advisorAnswer,
+  userName,
 }) {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
@@ -40,7 +41,10 @@ export default function Dashboard({
 
       <main className="main">
         <div className="main-col">
-          <TopBar onMenuClick={() => setSidebarOpen(true)} />
+          <TopBar
+            userName={userName || "Doctor"}
+            onMenuClick={() => setSidebarOpen(true)}
+          />
           <StatsRow liveStats={liveStats} />
           <InsightPanels
             onStartAction={onStartAction}
