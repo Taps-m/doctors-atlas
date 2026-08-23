@@ -1060,7 +1060,7 @@
   }
 
   .atlas .health-card {
-    grid-column: auto;
+    grid-column: 1 / -1;
     padding-right: 0;
     border-right: none;
   }
