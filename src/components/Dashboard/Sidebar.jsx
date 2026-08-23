@@ -66,37 +66,48 @@ export default function Sidebar({
         <div
           className="brand"
           style={{
-            paddingBottom: 18,
-            marginBottom: 8,
+            paddingBottom: 22,
+            marginBottom: 10,
             borderBottom: "1px solid rgba(255,255,255,0.08)",
+            gap: 14,
           }}
         >
           <div
             className="brand__mark"
             style={{
-              width: 38,
-              height: 38,
-              borderRadius: 11,
+              width: 52,
+              height: 52,
+              borderRadius: 14,
               background: "linear-gradient(135deg, #1a9e8f 0%, #14746a 100%)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              boxShadow: "0 4px 14px rgba(26,158,143,0.45)",
+              boxShadow: "0 6px 18px rgba(26,158,143,0.5)",
               flexShrink: 0,
             }}
           >
-            <Compass size={19} strokeWidth={2.2} color="#fff" />
+            <Compass size={27} strokeWidth={2.2} color="#fff" />
           </div>
           <div className="brand__text">
             <div
               className="brand__eyebrow"
-              style={{ letterSpacing: "0.16em", opacity: 0.6, fontSize: 10.5 }}
+              style={{ letterSpacing: "0.18em", opacity: 0.6, fontSize: 11.5 }}
             >
               DOCTORS
             </div>
-            <div className="brand__name" style={{ display: "flex", alignItems: "baseline" }}>
+            <div className="brand__name" style={{ fontSize: 24, lineHeight: 1.1 }}>
               ATLAS
-              <sup style={{ fontSize: "0.4em", fontWeight: 600, marginLeft: 2, opacity: 0.7 }}>
+              <sup
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  marginLeft: 3,
+                  opacity: 0.7,
+                  verticalAlign: "top",
+                  position: "relative",
+                  top: 2,
+                }}
+              >
                 TM
               </sup>
             </div>
