@@ -4,13 +4,14 @@ import Login from "./components/Auth/Login";
 import DailyLog from "./components/DailyLog/DailyLog";
 import Patients from "./components/Patients/Patients";
 import Appointments from "./components/Appointments/Appointments";
+import Insights from "./components/Insights/Insights";
 import { api } from "./api";
 
-const STANDALONE_VIEWS = ["daily-log", "patients", "appointments"];
+const STANDALONE_VIEWS = ["daily-log", "patients", "appointments", "insights"];
 
 export default function App() {
   const [loggedIn, setLoggedIn] = useState(api.isLoggedIn());
-  const [view, setView] = useState("dashboard"); // "dashboard" | "daily-log" | "patients" | "appointments"
+  const [view, setView] = useState("dashboard"); // "dashboard" | "daily-log" | "patients" | "appointments" | "insights"
   const [user, setUser] = useState(null);
   const [liveStats, setLiveStats] = useState(null);
   const [advisorAnswer, setAdvisorAnswer] = useState("");
@@ -99,6 +100,7 @@ export default function App() {
         {view === "daily-log" && <DailyLog doctorName={user?.name || "Doctor"} onSaved={refresh} />}
         {view === "patients" && <Patients />}
         {view === "appointments" && <Appointments />}
+        {view === "insights" && <Insights />}
 
         <div style={{ textAlign: "center", marginTop: 16 }}>
           {!(view === "daily-log" && user?.role === "staff") && (
