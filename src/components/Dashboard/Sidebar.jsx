@@ -1,5 +1,5 @@
 import React from "react";
-import { Sparkles, Target, X, LogOut } from "lucide-react";
+import { Target, X, LogOut } from "lucide-react";
 import { getIcon } from "./iconMap";
 import { navItems } from "./data";
 import { api } from "../../api";
@@ -20,8 +20,8 @@ function NavItem({ icon, label, active, onClick }) {
 
 /**
  * Sidebar
- * Primary navigation + AI Advisor call-to-action.
- * `activeItem` / `onNavigate` let the parent app control routing.
+ * Primary navigation. `activeItem` / `onNavigate` let the parent app
+ * control routing.
  *
  * Log out lives here too (rather than at the bottom of the page
  * content) so it's always on screen without scrolling, on any page.
@@ -103,16 +103,6 @@ export default function Sidebar({
         </button>
 
         <div className="nav-spacer" />
-
-        <div className="advisor-cta" role="button" tabIndex={0}>
-          <div className="advisor-cta__icon">
-            <Sparkles size={15} />
-          </div>
-          <div>
-            <div className="advisor-cta__title">AI Advisor</div>
-            <div className="advisor-cta__sub">Ask anything about your practice</div>
-          </div>
-        </div>
       </aside>
     </>
   );

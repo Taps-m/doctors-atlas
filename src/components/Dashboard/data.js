@@ -19,10 +19,6 @@ export const noShowData = [8, 10, 9, 13, 11, 15, 13, 16, 14, 12, 13, 11].map(
   (v, i) => ({ i, v })
 );
 
-export const attentionData = [30, 34, 28, 32, 25, 29, 22, 24, 18, 16, 14, 12].map(
-  (v, i) => ({ i, v })
-);
-
 export const navItems = [
   { id: "dashboard", label: "Dashboard", icon: "Home", active: true },
   { id: "daily-log", label: "Daily Log", icon: "ClipboardList" },
@@ -85,36 +81,6 @@ export const practiceHealth = {
   max: 100,
   deltaLabel: "8 pts",
   deltaSub: "vs last month",
-};
-
-export const attentionPanel = {
-  title: "Repeat visits have dropped for the last 3 weeks.",
-  description: "Most first-time patients are not followed up.",
-  priority: "HIGH",
-  chartData: attentionData,
-};
-
-export const actionPanel = {
-  title: "Try a post-visit follow-up workflow for 30 days.",
-  impact: [
-    "Repeat visits by 5–10%",
-    "Patient satisfaction",
-    "Revenue",
-  ],
-};
-
-export const experimentPanel = {
-  title: "Saturday morning clinic",
-  runningSince: "Aug 1",
-  stats: [
-    { icon: "Calendar", value: "8", label: "Additional appointments" },
-    { icon: "Users", value: "6", label: "Attended" },
-    { icon: "Beaker", value: "₹3,000", label: "Additional revenue" },
-  ],
-  status: {
-    title: "Looks promising!",
-    subtitle: "Keep it going.",
-  },
 };
 
 export const advisorPrompts = [
