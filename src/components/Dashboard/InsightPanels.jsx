@@ -1,6 +1,29 @@
 import React, { useEffect, useState } from "react";
-import { CalendarClock, Sunrise, Users, Clock3 } from "lucide-react";
+import { CalendarClock, Sunrise, Users, Clock3, AlertTriangle, TrendingUp, Sparkles, Send } from "lucide-react";
 import { api } from "../../api";
+
+const METRIC_LABEL = {
+  patients: "Patient volume",
+  revenue: "Revenue",
+  repeat_visits: "Repeat visits",
+  no_show_rate: "No-show rate",
+};
+
+// Whether a rising number is good news for this metric - used to work
+// out which real stat most deserves attention (no_show_rate is the
+// one metric where "up" is bad news, not good).
+const HIGHER_IS_BETTER = {
+  patients: true,
+  revenue: true,
+  repeat_visits: true,
+  no_show_rate: false,
+};
+
+function formatMetricValue(key, value) {
+  if (key === "revenue") return formatMoney(value);
+  if (key === "repeat_visits" || key === "no_show_rate") return `${Math.round(value)}%`;
+  return `${Math.round(value)}`;
+}
 
 function todayStr() {
   const d = new Date();
@@ -178,17 +201,172 @@ function TodayAppointments() {
 }
 
 /**
+ * WhatNeedsAttention
+ * Real, live data - not a fixed sentence. Pulls the same /stats numbers
+ * shown in the cards up top (current period vs the previous one) and
+ * picks out whichever metric moved the least favorably. If nothing is
+ * actually trending badly, it says so honestly rather than inventing
+ * a problem to display.
+ */
+function WhatNeedsAttention({ onFlag }) {
+  const [state, setState] = useState({ loading: true, flagged: null, error: "" });
+
+  useEffect(() => {
+    api
+      .getStats({})
+      .then((stats) => {
+        let worst = null;
+        for (const key of Object.keys(HIGHER_IS_BETTER)) {
+          const stat = stats[key];
+          if (!stat) continue;
+          const higherIsBetter = HIGHER_IS_BETTER[key];
+          // "badness" > 0 means this metric moved the wrong way.
+          const badness = higherIsBetter ? -stat.change_pct : stat.change_pct;
+          if (!worst || badness > worst.badness) {
+            worst = { key, badness, value: stat.value, change_pct: stat.change_pct };
+          }
+        }
+        const flagged = worst && worst.badness > 0 ? worst : null;
+        setState({ loading: false, flagged, error: "" });
+        onFlag && onFlag(flagged);
+      })
+      .catch((err) => {
+        setState({ loading: false, flagged: null, error: err.message || "Could not load your stats" });
+        onFlag && onFlag(null);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const priority = !state.flagged ? null : state.flagged.badness >= 15 ? "HIGH" : state.flagged.badness >= 5 ? "MODERATE" : "LOW";
+
+  return (
+    <div className="panel">
+      <div className="panel__head">
+        <span className="panel__head-icon">
+          <AlertTriangle size={13} />
+        </span>
+        <span>WHAT NEEDS ATTENTION?</span>
+      </div>
+
+      {state.loading ? (
+        <p style={{ color: "#6b7a90", fontSize: 13 }}>Loading...</p>
+      ) : state.error ? (
+        <p style={{ color: "#b3272c", fontSize: 13 }}>{state.error}</p>
+      ) : !state.flagged ? (
+        <>
+          <h3 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 700 }}>
+            Nothing's trending the wrong way right now.
+          </h3>
+          <p style={{ color: "#6b7a90", fontSize: 13, margin: 0 }}>
+            Every tracked metric is flat or improving compared to the previous period.
+          </p>
+        </>
+      ) : (
+        <>
+          <h3 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 700 }}>
+            {METRIC_LABEL[state.flagged.key]} is {state.flagged.change_pct < 0 ? "down" : "up"}{" "}
+            {Math.abs(state.flagged.change_pct)}% compared to the previous period.
+          </h3>
+          <p style={{ color: "#6b7a90", fontSize: 13, margin: "0 0 14px" }}>
+            Currently at {formatMetricValue(state.flagged.key, state.flagged.value)}.
+          </p>
+          {priority && (
+            <div className="priority-pill">
+              <AlertTriangle size={13} /> PRIORITY: {priority}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+/**
+ * AskAboutIt
+ * The real, guardrailed follow-through on "what should you do" - a
+ * button that asks your actual AI Advisor about whatever WhatNeedsAttention
+ * just flagged (or a general check-in if nothing was flagged), and shows
+ * the real answer inline. No fabricated action plan, no fake buttons.
+ */
+function AskAboutIt({ flagged }) {
+  const [answer, setAnswer] = useState("");
+  const [asking, setAsking] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleAsk() {
+    setAsking(true);
+    setError("");
+    setAnswer("");
+    const question = flagged
+      ? `${METRIC_LABEL[flagged.key]} is ${flagged.change_pct < 0 ? "down" : "up"} ${Math.abs(flagged.change_pct)}% vs the previous period. What's worth considering here?`
+      : "What's the one thing most worth focusing on right now?";
+    try {
+      const res = await api.askAdvisor(question);
+      setAnswer(res.answer);
+    } catch (err) {
+      setError(err.message || "Couldn't reach the AI Advisor");
+    } finally {
+      setAsking(false);
+    }
+  }
+
+  return (
+    <div className="panel">
+      <div className="panel__head">
+        <span className="panel__head-icon">
+          <TrendingUp size={13} />
+        </span>
+        <span>WHAT SHOULD YOU DO?</span>
+      </div>
+
+      {!answer && !asking && (
+        <p style={{ color: "#6b7a90", fontSize: 13.5, margin: "0 0 14px", lineHeight: 1.6 }}>
+          {flagged
+            ? `Ask your AI Advisor about ${METRIC_LABEL[flagged.key].toLowerCase()} - it'll answer using your real numbers, not a guess.`
+            : "Ask your AI Advisor what's most worth focusing on right now."}
+        </p>
+      )}
+
+      {asking && <p style={{ color: "#6b7a90", fontSize: 13 }}>Thinking...</p>}
+      {error && <p style={{ color: "#b3272c", fontSize: 13 }}>{error}</p>}
+      {answer && <p style={{ fontSize: 13.5, lineHeight: 1.6, margin: "0 0 14px" }}>{answer}</p>}
+
+      {!asking && (
+        <button
+          type="button"
+          className="btn-primary"
+          onClick={handleAsk}
+          style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+        >
+          <Sparkles size={14} /> {answer ? "Ask again" : "Ask the AI Advisor"} <Send size={12} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+/**
  * InsightPanels
- * Two real, live cards - what's actually happened today, and what's
- * actually on the schedule today. Replaces the old hardcoded mockup
- * cards (fixed fake numbers, plus a "Current Experiment" card for a
- * feature that was deliberately dropped from the build).
+ * Two rows of real, live cards. Row one: what's actually happened
+ * today, and what's actually on today's schedule. Row two: which real
+ * metric most needs attention (computed from your actual stats, not a
+ * fixed sentence), and a genuine, guardrailed AI Advisor answer about
+ * it. Replaces the old hardcoded mockup cards, including a "Current
+ * Experiment" card for a feature that was deliberately dropped.
  */
 export default function InsightPanels() {
+  const [flagged, setFlagged] = useState(null);
+
   return (
-    <div className="panels" style={{ gridTemplateColumns: "repeat(2, 1fr)" }}>
-      <TodaySnapshot />
-      <TodayAppointments />
-    </div>
+    <>
+      <div className="panels" style={{ gridTemplateColumns: "repeat(2, 1fr)" }}>
+        <TodaySnapshot />
+        <TodayAppointments />
+      </div>
+      <div className="panels" style={{ gridTemplateColumns: "repeat(2, 1fr)", marginTop: 16 }}>
+        <WhatNeedsAttention onFlag={setFlagged} />
+        <AskAboutIt flagged={flagged} />
+      </div>
+    </>
   );
 }

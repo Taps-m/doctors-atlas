@@ -98,13 +98,6 @@ export const testimonial = {
     "https://images.unsplash.com/photo-1594824476967-48c8b964273f?q=80&w=800&auto=format&fit=crop",
 };
 
-export const repeatVisitsSummary = {
-  label: "Repeat Visits",
-  value: "34%",
-  delta: "3%",
-  deltaUp: false,
-};
-
 export const howItWorksSteps = [
   {
     step: 1,
