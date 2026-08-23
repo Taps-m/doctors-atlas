@@ -36,7 +36,7 @@ function PracticeHealthRing({ score, max, deltaLabel, deltaSub }) {
     <div className="stat-card health-card">
       <div className="health-card__title">Practice Health</div>
       <div className="health-ring">
-        <svg width="100" height="100" viewBox="0 0 100 100">
+        <svg width="100%" height="100%" viewBox="0 0 100 100">
           <circle cx="50" cy="50" r={RADIUS} fill="none" stroke="#e7ebf1" strokeWidth="9" />
           <circle
             cx="50"
