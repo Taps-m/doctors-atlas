@@ -7,7 +7,83 @@ const ROLE_LABEL = { doctor: "Doctor", admin: "Admin", staff: "Staff" };
 
 /** Resize + compress a chosen image client-side before it's ever sent
  * to the backend, so a phone photo doesn't blow past the payload limit. */
-function resizeImage(file, maxSize = 220, quality = 0.82) {
+/**
+ * Makes a flat white/near-white background transparent, so a logo
+ * saved as a JPEG (or a PNG with white filled in) doesn't show as a
+ * white slab against the dark sidebar.
+ *
+ * Deliberately conservative: it only clears pixels reachable from the
+ * edges of the image, flood-filling inward. That means white INSIDE
+ * the logo - the middle of a letter O, a white centre on a crest - is
+ * left alone, and a logo that has no white border is returned
+ * untouched. Anti-aliased edge pixels are faded rather than cut, so
+ * the result doesn't get a hard jagged rim.
+ */
+function stripWhiteBackground(canvas) {
+  const ctx = canvas.getContext("2d");
+  const { width: w, height: h } = canvas;
+  const image = ctx.getImageData(0, 0, w, h);
+  const d = image.data;
+
+  const NEAR_WHITE = 238; // treat >= this on every channel as background
+  const SOFT_EDGE = 200; // between this and NEAR_WHITE, fade instead of cut
+
+  const isBg = (i) => d[i] >= NEAR_WHITE && d[i + 1] >= NEAR_WHITE && d[i + 2] >= NEAR_WHITE;
+
+  // If the corners aren't white, there's no white background to strip.
+  const corners = [0, (w - 1) * 4, (h - 1) * w * 4, ((h - 1) * w + (w - 1)) * 4];
+  if (!corners.some(isBg)) return false;
+
+  const seen = new Uint8Array(w * h);
+  const stack = [];
+  const push = (x, y) => {
+    if (x < 0 || y < 0 || x >= w || y >= h) return;
+    const p = y * w + x;
+    if (seen[p]) return;
+    seen[p] = 1;
+    stack.push(p);
+  };
+
+  for (let x = 0; x < w; x++) {
+    push(x, 0);
+    push(x, h - 1);
+  }
+  for (let y = 0; y < h; y++) {
+    push(0, y);
+    push(w - 1, y);
+  }
+
+  while (stack.length) {
+    const p = stack.pop();
+    const i = p * 4;
+    if (!isBg(i)) {
+      // Soften the boundary rather than leaving a hard white fringe.
+      const lum = (d[i] + d[i + 1] + d[i + 2]) / 3;
+      if (lum > SOFT_EDGE) {
+        d[i + 3] = Math.round(d[i + 3] * (1 - (lum - SOFT_EDGE) / (NEAR_WHITE - SOFT_EDGE)));
+      }
+      continue;
+    }
+    d[i + 3] = 0;
+    const x = p % w;
+    const y = (p - x) / w;
+    push(x + 1, y);
+    push(x - 1, y);
+    push(x, y + 1);
+    push(x, y - 1);
+  }
+
+  ctx.putImageData(image, 0, 0);
+  return true;
+}
+
+/**
+ * Resize + compress a chosen image client-side. Pass
+ * `{ transparentBackground: true }` for clinic logos, which sit on the
+ * dark sidebar and shouldn't carry a white slab behind them; profile
+ * photos keep their background and stay JPEG.
+ */
+function resizeImage(file, maxSize = 220, quality = 0.82, { transparentBackground = false } = {}) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -27,6 +103,16 @@ function resizeImage(file, maxSize = 220, quality = 0.82) {
         canvas.width = width;
         canvas.height = height;
         canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+
+        if (transparentBackground) {
+          const stripped = stripWhiteBackground(canvas);
+          // PNG only when we actually made something transparent -
+          // JPEG can't carry alpha, and PNG is bigger for photos.
+          if (stripped) {
+            resolve(canvas.toDataURL("image/png"));
+            return;
+          }
+        }
         resolve(canvas.toDataURL("image/jpeg", quality));
       };
       img.onerror = reject;
@@ -121,7 +207,9 @@ export default function Settings() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const dataUrl = await resizeImage(file);
+      // Logos sit on the dark sidebar, so clear any flat white
+      // background the file was saved with.
+      const dataUrl = await resizeImage(file, 260, 0.82, { transparentBackground: true });
       setClinicLogo(dataUrl);
     } catch {
       setClinicMsg("Could not read that image - try a different file");
