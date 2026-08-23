@@ -106,6 +106,12 @@ export default function Insights() {
 
   const maxRevenue = Math.max(...logs.map((l) => Number(l.revenue || 0)), 1);
 
+  // Comparing two halves of the period only means something once both
+  // halves actually have a day in them — with 1-2 logged days there's
+  // no real "earlier half" yet, so skip the delta rather than show a
+  // misleading "100% down".
+  const hasTrend = firstHalf.length > 0 && secondHalf.length > 0;
+
   function deltaClass(v) {
     if (v > 0) return "up";
     if (v < 0) return "down";
@@ -113,6 +119,9 @@ export default function Insights() {
   }
 
   function Delta({ value }) {
+    if (!hasTrend) {
+      return <div className="insights-kpi__delta flat">Log more days to see a trend</div>;
+    }
     const cls = deltaClass(value);
     const Icon = value < 0 ? TrendingDown : TrendingUp;
     return (
