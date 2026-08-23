@@ -366,7 +366,16 @@ export default function Settings() {
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   <label
                     className="set-btn set-btn--ghost"
-                    style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}
+                    style={{
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      // --ghost is monospaced for the invite code; these
+                      // are ordinary buttons, so undo that here.
+                      fontFamily: "inherit",
+                      letterSpacing: "normal",
+                    }}
                   >
                     <Upload size={14} /> {clinicLogo ? "Change logo" : "Upload logo"}
                     <input

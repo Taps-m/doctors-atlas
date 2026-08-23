@@ -65,19 +65,19 @@ function ClinicCard() {
   return (
     <div
       style={{
-        margin: "0 4px 18px",
-        padding: "13px 14px",
-        borderRadius: 12,
+        margin: "0 6px 20px",
+        padding: "18px 16px 16px",
+        borderRadius: 14,
         background: "rgba(255,255,255,0.05)",
         border: "1px solid rgba(255,255,255,0.08)",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
         <span
           style={{
-            width: 26,
-            height: 26,
-            borderRadius: 8,
+            width: 52,
+            height: 52,
+            borderRadius: 12,
             background: clinic.logo_url ? "#fff" : "rgba(26,158,143,0.22)",
             color: "#5fd6c4",
             display: "flex",
@@ -85,6 +85,7 @@ function ClinicCard() {
             justifyContent: "center",
             flexShrink: 0,
             overflow: "hidden",
+            padding: clinic.logo_url ? 3 : 0,
           }}
         >
           {/* Her own logo when she's uploaded one; a neutral icon
@@ -96,30 +97,35 @@ function ClinicCard() {
               style={{ width: "100%", height: "100%", objectFit: "contain" }}
             />
           ) : (
-            <Building2 size={13} />
+            <Building2 size={24} />
           )}
         </span>
         <div style={{ minWidth: 0 }}>
           <div
             style={{
-              fontSize: 9.5,
+              fontSize: 10,
               fontWeight: 700,
-              letterSpacing: "0.1em",
+              letterSpacing: "0.12em",
               color: "rgba(230,236,247,0.45)",
               textTransform: "uppercase",
             }}
           >
             Your clinic
           </div>
+          {/* Wraps to a second line rather than truncating - her
+              clinic's name is the point of this card. */}
           <div
             style={{
-              fontSize: 13,
+              fontSize: 15.5,
               fontWeight: 700,
-              color: "#e6ecf7",
-              lineHeight: 1.25,
+              color: "#f2f6fc",
+              lineHeight: 1.3,
+              marginTop: 2,
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
               overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
+              overflowWrap: "anywhere",
             }}
             title={clinic.name}
           >
@@ -133,14 +139,14 @@ function ClinicCard() {
         onClick={copyCode}
         title="Copy invite code"
         style={{
-          marginTop: 10,
+          marginTop: 14,
           width: "100%",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           gap: 8,
-          padding: "7px 10px",
-          borderRadius: 8,
+          padding: "10px 12px",
+          borderRadius: 10,
           background: "rgba(255,255,255,0.06)",
           border: "1px solid rgba(255,255,255,0.1)",
           color: "#e6ecf7",
@@ -148,14 +154,14 @@ function ClinicCard() {
           font: "inherit",
         }}
       >
-        <span style={{ fontSize: 10, color: "rgba(230,236,247,0.5)", fontWeight: 600 }}>
+        <span style={{ fontSize: 11.5, color: "rgba(230,236,247,0.55)", fontWeight: 600 }}>
           Invite code
         </span>
-        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: "0.04em" }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          <span style={{ fontSize: 15, fontWeight: 800, letterSpacing: "0.04em" }}>
             {clinic.id}
           </span>
-          {copied ? <Check size={12} color="#5fd6c4" /> : <Copy size={12} opacity={0.6} />}
+          {copied ? <Check size={14} color="#5fd6c4" /> : <Copy size={14} opacity={0.6} />}
         </span>
       </button>
     </div>
