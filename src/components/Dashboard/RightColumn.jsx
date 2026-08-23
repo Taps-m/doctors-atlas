@@ -4,13 +4,59 @@ import { getIcon } from "./iconMap";
 import { testimonial, howItWorksSteps } from "./data";
 import { api } from "../../api";
 
+/**
+ * ProfileCard
+ * A circular portrait instead of the old rectangular photo tile - reads
+ * as an actual profile/business-card treatment rather than a cropped
+ * photo banner. Fully self-contained (inline styles) so it doesn't
+ * depend on whatever ".hero-card"/".quote-card" mean elsewhere.
+ */
 function ProfileCard({ avatarUrl, name }) {
   return (
-    <div>
-      <div className="hero-card">
-        <img src={avatarUrl || testimonial.imageUrl} alt={name || "Your profile photo"} />
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        background: "#fff",
+        borderRadius: 16,
+        padding: "24px 16px 18px",
+        boxShadow: "0 6px 20px rgba(15,27,48,0.08)",
+      }}
+    >
+      <div
+        style={{
+          width: 104,
+          height: 104,
+          borderRadius: "50%",
+          padding: 3,
+          background: "linear-gradient(135deg, #1a9e8f 0%, #6a5cf0 100%)",
+          boxShadow: "0 6px 16px rgba(26,158,143,0.3)",
+        }}
+      >
+        <img
+          src={avatarUrl || testimonial.imageUrl}
+          alt={name || "Your profile photo"}
+          style={{
+            width: "100%",
+            height: "100%",
+            borderRadius: "50%",
+            objectFit: "cover",
+            objectPosition: "center",
+            display: "block",
+            border: "3px solid #fff",
+          }}
+        />
       </div>
-      <div className="quote-card" style={{ textAlign: "center" }}>
+      <div
+        style={{
+          marginTop: 14,
+          fontSize: 15,
+          fontWeight: 800,
+          color: "#172033",
+          textAlign: "center",
+        }}
+      >
         {name || "Your Profile"}
       </div>
     </div>
