@@ -13,25 +13,14 @@ import { api } from "../../api";
  */
 function ProfileCard({ avatarUrl, name }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        background: "#fff",
-        borderRadius: 16,
-        padding: "24px 16px 18px",
-        boxShadow: "0 6px 20px rgba(15,27,48,0.08)",
-      }}
-    >
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
       <div
         style={{
-          width: 104,
-          height: 104,
+          width: "100%",
+          aspectRatio: "1 / 1",
           borderRadius: "50%",
-          padding: 3,
-          background: "linear-gradient(135deg, #1a9e8f 0%, #6a5cf0 100%)",
-          boxShadow: "0 6px 16px rgba(26,158,143,0.3)",
+          overflow: "hidden",
+          boxShadow: "0 4px 14px rgba(15,27,48,0.14)",
         }}
       >
         <img
@@ -40,19 +29,29 @@ function ProfileCard({ avatarUrl, name }) {
           style={{
             width: "100%",
             height: "100%",
-            borderRadius: "50%",
             objectFit: "cover",
             objectPosition: "center",
             display: "block",
-            border: "3px solid #fff",
           }}
         />
       </div>
       <div
         style={{
-          marginTop: 14,
-          fontSize: 15,
-          fontWeight: 800,
+          marginTop: 10,
+          fontSize: 10.5,
+          fontWeight: 700,
+          letterSpacing: "0.08em",
+          color: "#9aa5ba",
+          textTransform: "uppercase",
+        }}
+      >
+        Signed in as
+      </div>
+      <div
+        style={{
+          marginTop: 2,
+          fontSize: 14.5,
+          fontWeight: 700,
           color: "#172033",
           textAlign: "center",
         }}
