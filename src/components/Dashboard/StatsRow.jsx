@@ -2,9 +2,12 @@ import React from "react";
 import { ArrowUp, ArrowDown } from "lucide-react";
 import Sparkline from "./Sparkline";
 import { getIcon } from "./iconMap";
-import { statCards, practiceHealth } from "./data";
+// Only `statCards` is imported, and only for each card's label, icon,
+// colour and sparkline shape - never for a value. The old
+// `practiceHealth` placeholder is deliberately not imported any more.
+import { statCards } from "./data";
 
-function StatCard({ icon, iconBg, label, value, delta, deltaUp, sparkColor, data, vsLabel }) {
+function StatCard({ icon, iconBg, label, value, delta, deltaUp, sparkColor, data, vsLabel, hasLive }) {
   const Icon = getIcon(icon);
   return (
     <div className="stat-card">
@@ -14,14 +17,27 @@ function StatCard({ icon, iconBg, label, value, delta, deltaUp, sparkColor, data
         </span>
         <span className="stat-card__label">{label}</span>
       </div>
-      <div className="stat-card__value">{value}</div>
-      <div className={`stat-card__delta ${deltaUp ? "up" : "down"}`}>
-        {deltaUp ? <ArrowUp size={12} /> : <ArrowDown size={12} />}
-        {delta}
-        <span className="stat-card__vs">{vsLabel}</span>
+      <div className="stat-card__value" style={!hasLive ? { color: "#c2cad6" } : undefined}>
+        {value}
       </div>
+
+      {delta ? (
+        <div className={`stat-card__delta ${deltaUp ? "up" : "down"}`}>
+          {deltaUp ? <ArrowUp size={12} /> : <ArrowDown size={12} />}
+          {delta}
+          <span className="stat-card__vs">{vsLabel}</span>
+        </div>
+      ) : (
+        <div className="stat-card__delta" style={{ color: "#9aa5b5", fontWeight: 500 }}>
+          Loading…
+        </div>
+      )}
+
+      {/* The sparkline is a fixed decorative shape, not this clinic's
+          real trend, so it stays hidden until live numbers arrive
+          rather than implying a history that isn't there. */}
       <div className="stat-card__spark">
-        <Sparkline data={data} color={sparkColor} />
+        {hasLive && <Sparkline data={data} color={sparkColor} />}
       </div>
     </div>
   );
@@ -30,7 +46,9 @@ function StatCard({ icon, iconBg, label, value, delta, deltaUp, sparkColor, data
 function PracticeHealthRing({ score, max, deltaLabel, deltaSub }) {
   const RADIUS = 46;
   const CIRC = 2 * Math.PI * RADIUS;
-  const dash = (score / max) * CIRC;
+  // No score yet = an empty ring and a dash, never a stand-in number.
+  const hasScore = score !== null && score !== undefined;
+  const dash = hasScore ? (score / max) * CIRC : 0;
 
   return (
     <div className="stat-card health-card">
@@ -51,14 +69,22 @@ function PracticeHealthRing({ score, max, deltaLabel, deltaSub }) {
           />
         </svg>
         <div className="health-ring__value">
-          <span className="health-ring__num">{score}</span>
-          <span className="health-ring__of">/{max}</span>
+          <span className="health-ring__num" style={!hasScore ? { color: "#c2cad6" } : undefined}>
+            {hasScore ? score : "—"}
+          </span>
+          {hasScore && <span className="health-ring__of">/{max}</span>}
         </div>
       </div>
-      <div className="health-card__delta">
-        <ArrowUp size={12} /> {deltaLabel}{" "}
-        <span className="health-card__vs">{deltaSub}</span>
-      </div>
+      {deltaLabel ? (
+        <div className="health-card__delta">
+          <ArrowUp size={12} /> {deltaLabel}{" "}
+          <span className="health-card__vs">{deltaSub}</span>
+        </div>
+      ) : (
+        <div className="health-card__delta" style={{ color: "#9aa5b5", fontWeight: 500 }}>
+          Loading…
+        </div>
+      )}
     </div>
   );
 }
@@ -100,19 +126,29 @@ function comparisonLabel(period) {
 
 /**
  * StatsRow
- * Renders the four KPI sparkline cards plus the Practice Health ring.
- * Uses the static `statCards` / `practiceHealth` data for sparkline
- * shape and styling, but overrides the headline value/delta with real
- * numbers from the backend when `liveStats` (a /stats API response)
- * is passed in - falls back to the static mock values otherwise.
+ * The four KPI cards plus the Practice Health ring.
+ *
+ * IMPORTANT: when the backend hasn't answered yet - a cold start, a
+ * dropped connection - these cards show a dash, NOT a number. They
+ * used to fall back to the placeholder figures in `statCards` (52
+ * patients, Rs 31,200, health 72), which meant a doctor could open her
+ * dashboard during an outage and read invented numbers as if they were
+ * her own. A blank is honest; a plausible wrong number is not.
+ *
+ * `statCards` is still the source of each card's label, icon and colour
+ * - presentation only, never a value.
  */
 export default function StatsRow({ liveStats }) {
-  const vsLabel = liveStats?.period ? comparisonLabel(liveStats.period) : "vs previous period";
+  const hasLive = !!liveStats;
+  const vsLabel = liveStats?.period ? comparisonLabel(liveStats.period) : "";
 
   const cards = statCards.map((card) => {
     const liveKey = LIVE_KEY[card.id];
     const live = liveStats && liveKey ? liveStats[liveKey] : null;
-    if (!live) return card;
+
+    if (!live) {
+      return { ...card, value: "—", delta: null, deltaUp: true };
+    }
 
     return {
       ...card,
@@ -122,19 +158,20 @@ export default function StatsRow({ liveStats }) {
     };
   });
 
-  const health = liveStats?.practice_health
+  const ph = liveStats?.practice_health;
+  const health = ph
     ? {
-        score: liveStats.practice_health.value,
+        score: ph.value,
         max: 100,
-        deltaLabel: `${Math.abs(liveStats.practice_health.change_pts)} pts`,
+        deltaLabel: `${Math.abs(ph.change_pts)} pts`,
         deltaSub: vsLabel,
       }
-    : practiceHealth;
+    : { score: null, max: 100, deltaLabel: null, deltaSub: "" };
 
   return (
     <div className="stats-row">
       {cards.map((card) => (
-        <StatCard key={card.id} {...card} vsLabel={vsLabel} />
+        <StatCard key={card.id} {...card} vsLabel={vsLabel} hasLive={hasLive} />
       ))}
       <PracticeHealthRing
         score={health.score}
