@@ -119,4 +119,20 @@ export const api = {
   async measureAction(id) {
     return request(`/actions/${id}/measure`, { method: "POST" });
   },
+
+  // ---------- Patients ----------
+  async listPatients() {
+    return request("/patients");
+  },
+
+  async addPatient({ name, phone, firstVisitAt }) {
+    return request("/patients", {
+      method: "POST",
+      body: { name, phone, first_visit_at: firstVisitAt || null },
+    });
+  },
+
+  async deletePatient(id) {
+    return request(`/patients/${id}`, { method: "DELETE" });
+  },
 };

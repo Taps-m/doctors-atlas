@@ -1,0 +1,208 @@
+/* Patients.css
+   Standalone page (same treatment as the Daily Log page) — namespaced
+   under .patients-page so it can't leak into or clash with Dashboard.css.
+*/
+
+.patients-page {
+  max-width: 720px;
+  margin: 0 auto;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #10233d;
+}
+
+.patients-page__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.patients-page__head h2 {
+  margin: 0 0 4px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.patients-page__head p {
+  margin: 0;
+  color: #6b7a90;
+  font-size: 13px;
+}
+
+.patients-page__add-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #1a9e8f;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.patients-page__add-btn:hover {
+  background: #158378;
+}
+
+.patients-page__form {
+  background: #fff;
+  border: 1px solid #e7ebf1;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.patients-page__form-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.patients-page__form input {
+  flex: 1 1 180px;
+  min-width: 0;
+  border: 1px solid #e7ebf1;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13.5px;
+  font-family: inherit;
+}
+
+.patients-page__form-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.patients-page__form-actions button {
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.patients-page__save {
+  background: #1a9e8f;
+  color: #fff;
+  border: none;
+}
+
+.patients-page__save:hover {
+  background: #158378;
+}
+
+.patients-page__save:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.patients-page__cancel {
+  background: #fff;
+  color: #10233d;
+  border: 1px solid #e7ebf1;
+}
+
+.patients-page__error {
+  color: #b3272c;
+  background: #fdecec;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+}
+
+.patients-page__list {
+  background: #fff;
+  border: 1px solid #e7ebf1;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.patients-page__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e7ebf1;
+}
+
+.patients-page__row:last-child {
+  border-bottom: none;
+}
+
+.patients-page__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #eaf1ff;
+  color: #2f6fed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.patients-page__row-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.patients-page__row-name {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.patients-page__row-sub {
+  color: #6b7a90;
+  font-size: 12.5px;
+  margin-top: 2px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.patients-page__row-sub span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.patients-page__delete {
+  background: transparent;
+  border: none;
+  color: #6b7a90;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.patients-page__delete:hover {
+  background: #fdecec;
+  color: #b3272c;
+}
+
+.patients-page__empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: #6b7a90;
+  font-size: 13.5px;
+}
+
+.patients-page__loading {
+  padding: 32px 16px;
+  text-align: center;
+  color: #6b7a90;
+  font-size: 13.5px;
+}

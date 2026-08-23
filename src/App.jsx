@@ -2,11 +2,12 @@ import React, { useEffect, useState } from "react";
 import Dashboard from "./components/Dashboard";
 import Login from "./components/Auth/Login";
 import DailyLog from "./components/DailyLog/DailyLog";
+import Patients from "./components/Patients/Patients";
 import { api } from "./api";
 
 export default function App() {
   const [loggedIn, setLoggedIn] = useState(api.isLoggedIn());
-  const [view, setView] = useState("dashboard"); // "dashboard" | "daily-log"
+  const [view, setView] = useState("dashboard"); // "dashboard" | "daily-log" | "patients"
   const [user, setUser] = useState(null);
   const [liveStats, setLiveStats] = useState(null);
   const [advisorAnswer, setAdvisorAnswer] = useState("");
@@ -55,8 +56,8 @@ export default function App() {
   }
 
   function handleNavigate(id) {
-    if (id === "daily-log") {
-      setView("daily-log");
+    if (id === "daily-log" || id === "patients") {
+      setView(id);
     } else {
       setView("dashboard");
     }
@@ -102,6 +103,22 @@ export default function App() {
               ← Back to Dashboard
             </button>
           )}
+          <button onClick={handleLogout} style={backLinkStyle}>
+            Log out
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === "patients") {
+    return (
+      <div style={{ padding: 24, background: "#f4f6fa", minHeight: "100vh" }}>
+        <Patients />
+        <div style={{ textAlign: "center", marginTop: 16 }}>
+          <button onClick={() => setView("dashboard")} style={backLinkStyle}>
+            ← Back to Dashboard
+          </button>
           <button onClick={handleLogout} style={backLinkStyle}>
             Log out
           </button>
