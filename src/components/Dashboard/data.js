@@ -29,9 +29,7 @@ export const navItems = [
   { id: "patients", label: "Patients", icon: "Users" },
   { id: "appointments", label: "Appointments", icon: "Calendar" },
   { id: "insights", label: "Insights", icon: "BarChart2" },
-  { id: "experiments", label: "Experiments", icon: "FlaskConical" },
   { id: "reports", label: "Reports", icon: "FileBarChart" },
-  { id: "ai-advisor", label: "AI Advisor", icon: "Sparkles" },
   { id: "settings", label: "Settings", icon: "Settings" },
 ];
 
@@ -50,7 +48,7 @@ export const statCards = [
   {
     id: "revenue",
     label: "Revenue",
-    value: "\u20B931,200",
+    value: "₹31,200",
     delta: "9%",
     deltaUp: true,
     icon: "Rupee",
@@ -99,7 +97,7 @@ export const attentionPanel = {
 export const actionPanel = {
   title: "Try a post-visit follow-up workflow for 30 days.",
   impact: [
-    "Repeat visits by 5\u201310%",
+    "Repeat visits by 5–10%",
     "Patient satisfaction",
     "Revenue",
   ],
@@ -111,7 +109,7 @@ export const experimentPanel = {
   stats: [
     { icon: "Calendar", value: "8", label: "Additional appointments" },
     { icon: "Users", value: "6", label: "Attended" },
-    { icon: "Beaker", value: "\u20B93,000", label: "Additional revenue" },
+    { icon: "Beaker", value: "₹3,000", label: "Additional revenue" },
   ],
   status: {
     title: "Looks promising!",
@@ -182,5 +180,5 @@ export const howItWorksSteps = [
 export const currentUser = {
   name: "Dr. Ananya",
   avatarUrl: "https://i.pravatar.cc/80?img=47",
-  dateRange: "1 \u2013 17 Aug, 2026",
+  dateRange: "1 – 17 Aug, 2026",
 };
