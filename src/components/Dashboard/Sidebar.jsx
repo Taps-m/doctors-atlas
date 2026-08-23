@@ -30,8 +30,24 @@ function NavItem({ icon, label, active, onClick }) {
  * accounts, so for staff the request fails and this renders nothing -
  * no empty shell, no error message in the nav.
  */
+/** How long ago the most recent daily log was, in plain words. */
+function lastLogLabel(rows) {
+  if (!rows || rows.length === 0) return { text: "Never", stale: true };
+  const last = new Date(rows[0].log_date);
+  const today = new Date();
+  const days = Math.round(
+    (new Date(today.getFullYear(), today.getMonth(), today.getDate()) -
+      new Date(last.getFullYear(), last.getMonth(), last.getDate())) /
+      86400000
+  );
+  if (days <= 0) return { text: "Today", stale: false };
+  if (days === 1) return { text: "Yesterday", stale: false };
+  return { text: `${days} days ago`, stale: days >= 3 };
+}
+
 function ClinicCard() {
   const [clinic, setClinic] = useState(null);
+  const [lastLog, setLastLog] = useState(null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -42,6 +58,12 @@ function ClinicCard() {
       .catch(() => {
         /* staff account, or no clinic attached - show nothing */
       });
+    // Real data, and the one habit the whole product depends on -
+    // worth a glance every time the sidebar is on screen.
+    api
+      .listDailyLogs(1)
+      .then((rows) => alive && setLastLog(lastLogLabel(rows)))
+      .catch(() => {});
     return () => {
       alive = false;
     };
@@ -72,12 +94,15 @@ function ClinicCard() {
         border: "1px solid rgba(255,255,255,0.08)",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
+      {/* Stacked, not side-by-side: the logo reads as a proper mark
+          and the clinic name gets the card's full width instead of
+          being squeezed into a truncating column beside it. */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
         <span
           style={{
-            width: 52,
-            height: 52,
-            borderRadius: 12,
+            width: 64,
+            height: 64,
+            borderRadius: 16,
             background: clinic.logo_url ? "#fff" : "rgba(26,158,143,0.22)",
             color: "#5fd6c4",
             display: "flex",
@@ -85,7 +110,8 @@ function ClinicCard() {
             justifyContent: "center",
             flexShrink: 0,
             overflow: "hidden",
-            padding: clinic.logo_url ? 3 : 0,
+            padding: clinic.logo_url ? 4 : 0,
+            boxShadow: clinic.logo_url ? "0 4px 12px rgba(0,0,0,0.28)" : "none",
           }}
         >
           {/* Her own logo when she's uploaded one; a neutral icon
@@ -97,49 +123,70 @@ function ClinicCard() {
               style={{ width: "100%", height: "100%", objectFit: "contain" }}
             />
           ) : (
-            <Building2 size={24} />
+            <Building2 size={28} />
           )}
         </span>
-        <div style={{ minWidth: 0 }}>
-          <div
-            style={{
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: "0.12em",
-              color: "rgba(230,236,247,0.45)",
-              textTransform: "uppercase",
-            }}
-          >
-            Your clinic
-          </div>
-          {/* Wraps to a second line rather than truncating - her
-              clinic's name is the point of this card. */}
-          <div
-            style={{
-              fontSize: 15.5,
-              fontWeight: 700,
-              color: "#f2f6fc",
-              lineHeight: 1.3,
-              marginTop: 2,
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-              overflowWrap: "anywhere",
-            }}
-            title={clinic.name}
-          >
-            {clinic.name}
-          </div>
+
+        <div
+          style={{
+            fontSize: 9.5,
+            fontWeight: 700,
+            letterSpacing: "0.14em",
+            color: "rgba(230,236,247,0.4)",
+            textTransform: "uppercase",
+            marginTop: 12,
+          }}
+        >
+          Your clinic
+        </div>
+        <div
+          style={{
+            fontSize: 16,
+            fontWeight: 700,
+            color: "#f2f6fc",
+            lineHeight: 1.3,
+            marginTop: 3,
+            overflowWrap: "anywhere",
+          }}
+        >
+          {clinic.name}
         </div>
       </div>
+
+      <div style={{ height: 1, background: "rgba(255,255,255,0.09)", margin: "14px 0 12px" }} />
+
+      {/* Real, live: how long since the daily numbers were entered -
+          the habit the rest of the dashboard depends on. */}
+      {lastLog && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 8,
+            padding: "0 2px 10px",
+          }}
+        >
+          <span style={{ fontSize: 11.5, color: "rgba(230,236,247,0.55)", fontWeight: 600 }}>
+            Last log
+          </span>
+          <span
+            style={{
+              fontSize: 12.5,
+              fontWeight: 700,
+              color: lastLog.stale ? "#f0a868" : "#5fd6c4",
+            }}
+          >
+            {lastLog.text}
+          </span>
+        </div>
+      )}
 
       <button
         type="button"
         onClick={copyCode}
         title="Copy invite code"
         style={{
-          marginTop: 14,
           width: "100%",
           display: "flex",
           alignItems: "center",
