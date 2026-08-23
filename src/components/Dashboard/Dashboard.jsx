@@ -54,7 +54,7 @@ export default function Dashboard({
           )}
 
           <footer className="atlas-footer">
-            {"Doctors Atlas dashboard"}
+            © {new Date().getFullYear()} Doctors Atlas · Built by @Tapomoy-M
           </footer>
         </div>
 
