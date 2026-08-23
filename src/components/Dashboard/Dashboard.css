@@ -1049,7 +1049,7 @@
   }
 
   .atlas .stats-row {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, 1fr) 1fr;
     padding: 18px 14px;
   }
 
@@ -1060,9 +1060,18 @@
   }
 
   .atlas .health-card {
-    grid-column: 1 / -1;
+    grid-column: auto;
     padding-right: 0;
     border-right: none;
+  }
+
+  .atlas .health-ring {
+    width: 72px;
+    height: 72px;
+  }
+
+  .atlas .health-ring__num {
+    font-size: 18px;
   }
 
   .atlas .panels {
