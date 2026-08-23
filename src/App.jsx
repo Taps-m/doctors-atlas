@@ -6,9 +6,10 @@ import Patients from "./components/Patients/Patients";
 import Appointments from "./components/Appointments/Appointments";
 import Insights from "./components/Insights/Insights";
 import Reports from "./components/Reports/Reports";
+import Settings from "./components/Settings/Settings";
 import { api } from "./api";
 
-const STANDALONE_VIEWS = ["daily-log", "patients", "appointments", "insights", "reports"];
+const STANDALONE_VIEWS = ["daily-log", "patients", "appointments", "insights", "reports", "settings"];
 
 export default function App() {
   const [loggedIn, setLoggedIn] = useState(api.isLoggedIn());
@@ -103,6 +104,7 @@ export default function App() {
         {view === "appointments" && <Appointments />}
         {view === "insights" && <Insights />}
         {view === "reports" && <Reports />}
+        {view === "settings" && <Settings />}
 
         <div style={{ textAlign: "center", marginTop: 16 }}>
           {!(view === "daily-log" && user?.role === "staff") && (
@@ -138,11 +140,6 @@ export default function App() {
         dateRange={dateRange}
         onDateRangeChange={handleDateRangeChange}
       />
-      <div style={{ textAlign: "center", padding: 12 }}>
-        <button onClick={handleLogout} style={backLinkStyle}>
-          Log out
-        </button>
-      </div>
     </>
   );
 }

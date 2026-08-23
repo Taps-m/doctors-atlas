@@ -103,9 +103,16 @@ export const api = {
     return request(`/daily-log?limit=${limit}`);
   },
 
-  // ---------- Actions ----------
+  // ---------- Actions / Experiments ----------
   async listActions() {
     return request("/actions");
+  },
+
+  async createAction({ title, description }) {
+    return request("/actions", {
+      method: "POST",
+      body: { title, description: description || null },
+    });
   },
 
   async startAction(id) {
@@ -157,5 +164,36 @@ export const api = {
 
   async deleteAppointment(id) {
     return request(`/appointments/${id}`, { method: "DELETE" });
+  },
+
+  // ---------- Settings ----------
+  async updateProfile({ name, avatarUrl } = {}) {
+    const body = {};
+    if (name !== undefined) body.name = name;
+    if (avatarUrl !== undefined) body.avatar_url = avatarUrl;
+    return request("/settings/profile", { method: "PATCH", body });
+  },
+
+  async changePassword({ currentPassword, newPassword }) {
+    return request("/settings/change-password", {
+      method: "POST",
+      body: { current_password: currentPassword, new_password: newPassword },
+    });
+  },
+
+  async getClinic() {
+    return request("/settings/clinic");
+  },
+
+  async updateClinic({ name }) {
+    return request("/settings/clinic", { method: "PATCH", body: { name } });
+  },
+
+  async listStaff() {
+    return request("/settings/staff");
+  },
+
+  async removeStaff(id) {
+    return request(`/settings/staff/${id}`, { method: "DELETE" });
   },
 };

@@ -1,7 +1,8 @@
 import React from "react";
-import { Sparkles, Target, X } from "lucide-react";
+import { Sparkles, Target, X, LogOut } from "lucide-react";
 import { getIcon } from "./iconMap";
 import { navItems } from "./data";
+import { api } from "../../api";
 
 function NavItem({ icon, label, active, onClick }) {
   const Icon = getIcon(icon);
@@ -22,6 +23,11 @@ function NavItem({ icon, label, active, onClick }) {
  * Primary navigation + AI Advisor call-to-action.
  * `activeItem` / `onNavigate` let the parent app control routing.
  *
+ * Log out lives here too (rather than at the bottom of the page
+ * content) so it's always on screen without scrolling, on any page.
+ * It calls the API directly and reloads - simplest way to reset all
+ * app state without threading a logout handler through every page.
+ *
  * Responsive behavior:
  * - Desktop/tablet (>= 768px): fixed-width column, always visible.
  * - Mobile (< 768px): becomes an off-canvas drawer. Pass `isOpen` and
@@ -36,6 +42,11 @@ export default function Sidebar({
   function handleNavigate(id) {
     onNavigate && onNavigate(id);
     onClose && onClose(); // auto-close drawer on mobile after choosing a page
+  }
+
+  function handleLogout() {
+    api.logout();
+    window.location.reload();
   }
 
   return (
@@ -76,6 +87,20 @@ export default function Sidebar({
             onClick={() => handleNavigate(item.id)}
           />
         ))}
+
+        <button
+          className="nav-item"
+          type="button"
+          onClick={handleLogout}
+          style={{
+            marginTop: 6,
+            borderTop: "1px solid rgba(255,255,255,0.08)",
+            paddingTop: 14,
+          }}
+        >
+          <LogOut size={18} strokeWidth={2} />
+          <span>Log out</span>
+        </button>
 
         <div className="nav-spacer" />
 

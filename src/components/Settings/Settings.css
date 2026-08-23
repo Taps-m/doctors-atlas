@@ -1,0 +1,287 @@
+/* Settings.css
+   Standalone page (same treatment as Daily Log / Patients / Appointments /
+   Insights / Reports) — namespaced under .set-page.
+*/
+
+.set-page {
+  max-width: 680px;
+  margin: 0 auto;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #10233d;
+}
+
+.set-page__head {
+  margin-bottom: 20px;
+}
+
+.set-page__head h2 {
+  margin: 0 0 4px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.set-page__head p {
+  margin: 0;
+  color: #6b7a90;
+  font-size: 13px;
+}
+
+.set-section {
+  margin-bottom: 26px;
+}
+
+.set-section h3 {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7a90;
+  margin: 0 0 10px;
+}
+
+.set-card {
+  background: #fff;
+  border: 1px solid #e7ebf1;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.set-profile-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.set-avatar {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  background: #eef1f4;
+  color: #6b7a90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.set-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.set-avatar__badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #1a9e8f;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+}
+
+.set-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+}
+
+.set-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7a90;
+}
+
+.set-field input {
+  border: 1px solid #e7ebf1;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13.5px;
+  font-family: inherit;
+  width: 100%;
+}
+
+.set-field__sub {
+  color: #6b7a90;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.set-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 520px) {
+  .set-field-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.set-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.set-btn--primary {
+  background: #1a9e8f;
+  color: #fff;
+}
+
+.set-btn--primary:hover {
+  background: #158378;
+}
+
+.set-btn--primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.set-btn--ghost {
+  background: #f4f6fa;
+  color: #10233d;
+  border: 1px solid #e7ebf1;
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.set-btn--ghost:hover {
+  background: #eaf1ff;
+}
+
+.set-btn--icon {
+  background: transparent;
+  color: #6b7a90;
+  padding: 6px;
+  border-radius: 6px;
+}
+
+.set-btn--icon:hover {
+  background: #fdecec;
+  color: #b3272c;
+}
+
+.set-btn--icon:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.set-error {
+  color: #b3272c;
+  background: #fdecec;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+}
+
+.set-success {
+  color: #17824c;
+  background: #eafaf1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+}
+
+.set-loading,
+.set-empty {
+  color: #6b7a90;
+  font-size: 13px;
+  text-align: center;
+  padding: 12px 0;
+}
+
+.set-invite {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.set-invite__label {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.set-invite__sub {
+  color: #6b7a90;
+  font-size: 12.5px;
+  max-width: 44ch;
+  line-height: 1.5;
+}
+
+.set-team__title {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.set-team__list {
+  display: flex;
+  flex-direction: column;
+}
+
+.set-team__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #eef1f4;
+}
+
+.set-team__row:last-child {
+  border-bottom: none;
+}
+
+.set-team__row > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.set-team__name {
+  font-weight: 700;
+  font-size: 13.5px;
+}
+
+.set-team__email {
+  color: #6b7a90;
+  font-size: 12px;
+}
+
+.set-role {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.set-role--doctor { background: #eaf1ff; color: #2158c8; }
+.set-role--admin { background: #f3eaff; color: #6a3bc8; }
+.set-role--staff { background: #eef1f4; color: #6b7a90; }
