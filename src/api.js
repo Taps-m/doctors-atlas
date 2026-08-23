@@ -74,8 +74,15 @@ export const api = {
   },
 
   // ---------- Stats ----------
-  async getStats(days = 17) {
-    return request(`/stats?days=${days}`);
+  async getStats({ days = 17, start, end } = {}) {
+    const params = new URLSearchParams();
+    if (start && end) {
+      params.set("start", start);
+      params.set("end", end);
+    } else {
+      params.set("days", days);
+    }
+    return request(`/stats?${params.toString()}`);
   },
 
   // ---------- AI Advisor ----------

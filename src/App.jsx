@@ -11,6 +11,14 @@ export default function App() {
   const [liveStats, setLiveStats] = useState(null);
   const [advisorAnswer, setAdvisorAnswer] = useState("");
   const [loadError, setLoadError] = useState("");
+  // null = default rolling window (last 17 days); otherwise { start, end }
+  // as "YYYY-MM-DD" strings, set from the dashboard's date-range filter.
+  const [dateRange, setDateRange] = useState(null);
+
+  async function loadStats(range) {
+    const stats = await api.getStats(range ? { start: range.start, end: range.end } : {});
+    setLiveStats(stats);
+  }
 
   // Load the current user + stats once logged in (and again after
   // saving a new daily log, so the dashboard reflects it immediately).
@@ -19,8 +27,7 @@ export default function App() {
       const me = await api.me();
       setUser(me);
       if (me.role !== "staff") {
-        const stats = await api.getStats();
-        setLiveStats(stats);
+        await loadStats(dateRange);
       }
       setLoadError("");
     } catch (err) {
@@ -44,6 +51,7 @@ export default function App() {
     setLoggedIn(false);
     setUser(null);
     setLiveStats(null);
+    setDateRange(null);
   }
 
   function handleNavigate(id) {
@@ -52,6 +60,11 @@ export default function App() {
     } else {
       setView("dashboard");
     }
+  }
+
+  function handleDateRangeChange(range) {
+    setDateRange(range);
+    loadStats(range).catch((err) => setLoadError(err.message || "Could not load your data"));
   }
 
   async function handleAskAdvisor(question) {
@@ -114,6 +127,8 @@ export default function App() {
         advisorAnswer={advisorAnswer}
         userName={user?.name || "Doctor"}
         userAvatar={user?.avatar_url}
+        dateRange={dateRange}
+        onDateRangeChange={handleDateRangeChange}
       />
       <div style={{ textAlign: "center", padding: 12 }}>
         <button onClick={handleLogout} style={backLinkStyle}>
