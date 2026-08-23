@@ -1,15 +1,38 @@
-import React, { useEffect, useState } from "react";
+import React, { lazy, Suspense, useEffect, useState } from "react";
 import Dashboard from "./components/Dashboard";
 import Login from "./components/Auth/Login";
-import DailyLog from "./components/DailyLog/DailyLog";
-import Patients from "./components/Patients/Patients";
-import Appointments from "./components/Appointments/Appointments";
-import Insights from "./components/Insights/Insights";
-import Reports from "./components/Reports/Reports";
-import Settings from "./components/Settings/Settings";
 import { api } from "./api";
 
-const STANDALONE_VIEWS = ["daily-log", "patients", "appointments", "insights", "reports", "settings"];
+/**
+ * Everything below the dashboard is CODE-SPLIT with React.lazy: the
+ * browser downloads a page's code the first time it's opened, and not
+ * before. Previously all of these were imported at the top, so signing
+ * in meant downloading Patients, Reports, Settings and the illustrated
+ * guide (screenshots included) before the dashboard could show a single
+ * number - on a clinic's mobile connection that is a real wait for code
+ * most visits never run.
+ *
+ * Dashboard and Login stay eagerly imported: one of them is always the
+ * first thing rendered, so deferring them would only add a round trip.
+ */
+const DailyLog = lazy(() => import("./components/DailyLog/DailyLog"));
+const Patients = lazy(() => import("./components/Patients/Patients"));
+const Appointments = lazy(() => import("./components/Appointments/Appointments"));
+const Insights = lazy(() => import("./components/Insights/Insights"));
+const Reports = lazy(() => import("./components/Reports/Reports"));
+const Settings = lazy(() => import("./components/Settings/Settings"));
+const Guide = lazy(() => import("./components/Guide/Guide"));
+
+const STANDALONE_VIEWS = ["daily-log", "patients", "appointments", "insights", "reports", "settings", "guide"];
+
+/** Shown for the moment a lazily-loaded page is being fetched. */
+function PageLoading() {
+  return (
+    <div style={{ padding: "48px 0", textAlign: "center", color: "#6b7a90", fontSize: 14 }}>
+      Loading...
+    </div>
+  );
+}
 
 export default function App() {
   const [loggedIn, setLoggedIn] = useState(api.isLoggedIn());
@@ -99,12 +122,15 @@ export default function App() {
   if (STANDALONE_VIEWS.includes(view)) {
     return (
       <div style={{ padding: 24, background: "#f4f6fa", minHeight: "100vh" }}>
-        {view === "daily-log" && <DailyLog doctorName={user?.name || "Doctor"} onSaved={refresh} />}
-        {view === "patients" && <Patients />}
-        {view === "appointments" && <Appointments />}
-        {view === "insights" && <Insights />}
-        {view === "reports" && <Reports />}
-        {view === "settings" && <Settings />}
+        <Suspense fallback={<PageLoading />}>
+          {view === "daily-log" && <DailyLog doctorName={user?.name || "Doctor"} onSaved={refresh} />}
+          {view === "patients" && <Patients />}
+          {view === "appointments" && <Appointments />}
+          {view === "insights" && <Insights />}
+          {view === "reports" && <Reports />}
+          {view === "settings" && <Settings />}
+          {view === "guide" && <Guide />}
+        </Suspense>
 
         <div style={{ textAlign: "center", marginTop: 16 }}>
           {!(view === "daily-log" && user?.role === "staff") && (
