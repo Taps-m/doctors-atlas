@@ -314,8 +314,8 @@ function SuggestedFocus({ flagged }) {
     setAsking(true);
     setError("");
     const question = flagged
-      ? `In one or two sentences, suggest one or two concrete things worth trying this week to improve ${METRIC_LABEL[flagged.key].toLowerCase()} (it's ${flagged.change_pct < 0 ? "down" : "up"} ${Math.abs(flagged.change_pct)}% vs the previous period).`
-      : "In one or two sentences, suggest one or two concrete things worth trying this week to strengthen the practice.";
+      ? `Answer in at most 2 short sentences (35 words max) - no preamble, don't restate the numbers. Suggest one or two concrete things worth trying this week to improve ${METRIC_LABEL[flagged.key].toLowerCase()} (it's ${flagged.change_pct < 0 ? "down" : "up"} ${Math.abs(flagged.change_pct)}% vs the previous period).`
+      : "Answer in at most 2 short sentences (35 words max) - no preamble, no welcome message. Suggest one or two concrete things worth trying this week to strengthen the practice.";
     try {
       const res = await api.askAdvisor(question);
       setAnswer(res.answer);
@@ -339,7 +339,24 @@ function SuggestedFocus({ flagged }) {
         <p style={{ color: "#6b7a90", fontSize: 13 }}>Thinking...</p>
       )}
       {error && <p style={{ color: "#b3272c", fontSize: 13 }}>{error}</p>}
-      {answer && !asking && <p style={{ fontSize: 13.5, lineHeight: 1.6, margin: "0 0 12px" }}>{answer}</p>}
+      {answer && !asking && (
+        <p
+          style={{
+            fontSize: 13.5,
+            lineHeight: 1.6,
+            margin: "0 0 12px",
+            // Safety net: even if the AI ever ignores the length
+            // instruction above, the card still clips to 2 lines
+            // instead of growing tall and pushing the layout around.
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+          }}
+        >
+          {answer}
+        </p>
+      )}
 
       {!asking && flagged !== undefined && (
         <button
