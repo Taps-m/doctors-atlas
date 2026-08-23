@@ -94,8 +94,12 @@ export const testimonial = {
   quote:
     "Atlas shows me what to focus on next. I focus on my patients.",
   author: "Dr. Rohan S.",
+  // crop=faces lets Unsplash auto-detect and center the face server-side,
+  // so the photo always shows a confident, smiling doctor front-and-center
+  // (never cropped to a headless torso) no matter what size box it's
+  // placed in on the page.
   imageUrl:
-    "https://images.unsplash.com/photo-1594824476967-48c8b964273f?q=80&w=800&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1758691463582-11aea602cd4a?q=80&w=800&auto=format&fit=crop&crop=faces",
 };
 
 export const howItWorksSteps = [
