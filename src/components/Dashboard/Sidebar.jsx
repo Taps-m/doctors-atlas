@@ -98,34 +98,43 @@ function ClinicCard() {
           and the clinic name gets the card's full width instead of
           being squeezed into a truncating column beside it. */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
-        <span
-          style={{
-            width: 64,
-            height: 64,
-            borderRadius: 16,
-            background: clinic.logo_url ? "#fff" : "rgba(26,158,143,0.22)",
-            color: "#5fd6c4",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-            overflow: "hidden",
-            padding: clinic.logo_url ? 4 : 0,
-            boxShadow: clinic.logo_url ? "0 4px 12px rgba(0,0,0,0.28)" : "none",
-          }}
-        >
-          {/* Her own logo when she's uploaded one; a neutral icon
-              otherwise - she is never required to provide anything. */}
-          {clinic.logo_url ? (
-            <img
-              src={clinic.logo_url}
-              alt=""
-              style={{ width: "100%", height: "100%", objectFit: "contain" }}
-            />
-          ) : (
+        {/* Her own logo when she's uploaded one, shown bare and large -
+            no plate or frame around it, so the mark itself is what
+            reads. A neutral icon otherwise; she is never required to
+            provide anything. */}
+        {clinic.logo_url ? (
+          <img
+            src={clinic.logo_url}
+            alt=""
+            style={{
+              width: 104,
+              height: 104,
+              // cover + a circular clip crops away the square white
+              // margin most logo files are saved with, so the mark
+              // itself is all that shows against the dark sidebar.
+              objectFit: "cover",
+              borderRadius: "50%",
+              display: "block",
+              flexShrink: 0,
+            }}
+          />
+        ) : (
+          <span
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: 16,
+              background: "rgba(26,158,143,0.22)",
+              color: "#5fd6c4",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
             <Building2 size={28} />
-          )}
-        </span>
+          </span>
+        )}
 
         <div
           style={{
