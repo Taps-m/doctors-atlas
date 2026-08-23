@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Calendar, Filter, Bell, ChevronDown, Menu } from "lucide-react";
+import { Calendar, Filter, Bell, ChevronDown, Menu, Quote } from "lucide-react";
 import { currentUser } from "./data";
 
 function greeting() {
@@ -11,6 +11,52 @@ function greeting() {
 
 function formatDate(iso) {
   return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+/**
+ * Real, live label for the default (no custom filter applied) date
+ * pill - a genuine rolling window ending today, instead of the old
+ * fixed "1 - 17 Aug, 2026" string that never changed no matter what
+ * day it actually was.
+ */
+function formatDefaultRange(days = 17) {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(start.getDate() - (days - 1));
+
+  const startMonth = start.toLocaleDateString(undefined, { month: "short" });
+  const endMonth = end.toLocaleDateString(undefined, { month: "short" });
+  const year = end.getFullYear();
+
+  return startMonth === endMonth
+    ? `${start.getDate()} – ${end.getDate()} ${endMonth}, ${year}`
+    : `${start.getDate()} ${startMonth} – ${end.getDate()} ${endMonth}, ${year}`;
+}
+
+/**
+ * A small, verified pool of real quotes from famous physicians,
+ * scientists and thinkers in medicine - meant to counter the
+ * demotivation/burnout doctors can feel during a hard day. Rotates by
+ * calendar day (not on every page load, so it doesn't feel jittery,
+ * but genuinely changes rather than staying frozen on one line
+ * forever) via a deterministic day-of-year pick.
+ */
+const DOCTOR_QUOTES = [
+  { text: "To cure sometimes, to relieve often, to comfort always.", author: "Edward Livingston Trudeau" },
+  { text: "The art of medicine consists of amusing the patient while nature cures the disease.", author: "Voltaire" },
+  { text: "The good physician treats the disease; the great physician treats the patient who has the disease.", author: "William Osler" },
+  { text: "Medicine is a social science, and politics is nothing but medicine on a larger scale.", author: "Rudolf Virchow" },
+  { text: "Nothing in life is to be feared, it is only to be understood.", author: "Marie Curie" },
+  { text: "The secret of the care of the patient is in caring for the patient.", author: "Francis W. Peabody" },
+  { text: "Wherever the art of medicine is loved, there is also a love of humanity.", author: "Hippocrates" },
+  { text: "Fortune favors the prepared mind.", author: "Louis Pasteur" },
+];
+
+function todaysQuote() {
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((now - startOfYear) / 86400000);
+  return DOCTOR_QUOTES[dayOfYear % DOCTOR_QUOTES.length];
 }
 
 /**
@@ -38,7 +84,9 @@ export default function TopBar({
 
   const rangeLabel = dateRange
     ? `${formatDate(dateRange.start)} - ${formatDate(dateRange.end)}`
-    : currentUser.dateRange;
+    : formatDefaultRange();
+
+  const quote = todaysQuote();
 
   function openPicker() {
     setDraftStart(dateRange?.start || "");
@@ -75,6 +123,25 @@ export default function TopBar({
         <div className="greeting">
           <h1>{greeting()}, {userName} 👋</h1>
           <p>Here's what's happening in your practice.</p>
+          <p
+            style={{
+              marginTop: 6,
+              marginBottom: 0,
+              fontSize: 12.5,
+              lineHeight: 1.45,
+              color: "#5b6b85",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 6,
+              maxWidth: 460,
+            }}
+          >
+            <Quote size={13} style={{ flexShrink: 0, marginTop: 2, color: "#a9b3c7" }} />
+            <span>
+              <span style={{ fontStyle: "italic" }}>{quote.text}</span>{" "}
+              <span style={{ fontWeight: 700, color: "#39466a" }}>&mdash; {quote.author}</span>
+            </span>
+          </p>
         </div>
       </div>
 

@@ -38,6 +38,48 @@ function formatTime(iso) {
   return new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 }
 
+/**
+ * PanelHead
+ * A more eye-catching heading treatment for each insight card - a
+ * solid-color icon badge with a soft shadow plus a bold, spaced-out
+ * label - instead of a flat grey icon and plain caps text. Fully
+ * self-contained (inline styles) so it doesn't depend on whatever
+ * ".panel__head" happens to look like in the shared stylesheet.
+ */
+function PanelHead({ icon: Icon, label, color }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+      <span
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: 28,
+          height: 28,
+          borderRadius: 8,
+          background: color,
+          color: "#fff",
+          flexShrink: 0,
+          boxShadow: `0 4px 10px ${color}59`,
+        }}
+      >
+        <Icon size={14} strokeWidth={2.4} />
+      </span>
+      <span
+        style={{
+          fontSize: 12.5,
+          fontWeight: 800,
+          letterSpacing: "0.06em",
+          color: "#1f2937",
+          textTransform: "uppercase",
+        }}
+      >
+        {label}
+      </span>
+    </div>
+  );
+}
+
 const STATUS_COLOR = {
   scheduled: { bg: "#eaf1ff", fg: "#2158c8" },
   completed: { bg: "#eafaf1", fg: "#17824c" },
@@ -71,12 +113,7 @@ function TodaySnapshot() {
 
   return (
     <div className="panel">
-      <div className="panel__head">
-        <span className="panel__head-icon">
-          <Sunrise size={13} />
-        </span>
-        <span>TODAY'S SNAPSHOT</span>
-      </div>
+      <PanelHead icon={Sunrise} label="Today's Snapshot" color="#e8871e" />
       <h3 style={{ margin: "0 0 10px", fontSize: 14, fontWeight: 700, color: "#6b7a90" }}>{today}</h3>
 
       {state.loading ? (
@@ -135,12 +172,7 @@ function TodayAppointments() {
 
   return (
     <div className="panel">
-      <div className="panel__head">
-        <span className="panel__head-icon">
-          <CalendarClock size={13} />
-        </span>
-        <span>TODAY'S APPOINTMENTS</span>
-      </div>
+      <PanelHead icon={CalendarClock} label="Today's Appointments" color="#2f6fed" />
 
       {state.loading ? (
         <p style={{ color: "#6b7a90", fontSize: 13 }}>Loading...</p>
@@ -243,12 +275,7 @@ function WhatNeedsAttention({ onFlag }) {
 
   return (
     <div className="panel">
-      <div className="panel__head">
-        <span className="panel__head-icon">
-          <AlertTriangle size={13} />
-        </span>
-        <span>WHAT NEEDS ATTENTION?</span>
-      </div>
+      <PanelHead icon={AlertTriangle} label="What Needs Attention?" color="#dc2626" />
 
       {state.loading ? (
         <p style={{ color: "#6b7a90", fontSize: 13 }}>Loading...</p>
@@ -328,12 +355,7 @@ function SuggestedFocus({ flagged }) {
 
   return (
     <div className="panel">
-      <div className="panel__head">
-        <span className="panel__head-icon">
-          <TrendingUp size={13} />
-        </span>
-        <span>WHAT SHOULD YOU DO?</span>
-      </div>
+      <PanelHead icon={TrendingUp} label="What Should You Do?" color="#6a5cf0" />
 
       {(flagged === undefined || asking) && (
         <p style={{ color: "#6b7a90", fontSize: 13 }}>Thinking...</p>

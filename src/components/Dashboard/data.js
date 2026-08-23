@@ -143,5 +143,4 @@ export const howItWorksSteps = [
 export const currentUser = {
   name: "Dr. Ananya",
   avatarUrl: "https://i.pravatar.cc/80?img=47",
-  dateRange: "1 – 17 Aug, 2026",
 };
