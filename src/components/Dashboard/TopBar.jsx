@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { Calendar, Filter, Bell, ChevronDown, Menu, Quote } from "lucide-react";
-import { currentUser } from "./data";
+import React, { useEffect, useState } from "react";
+import { Calendar, Filter, Bell, Menu, Quote } from "lucide-react";
+import { api } from "../../api";
 
 function greeting() {
   const hour = new Date().getHours();
@@ -59,12 +59,97 @@ function todaysQuote() {
   return DOCTOR_QUOTES[dayOfYear % DOCTOR_QUOTES.length];
 }
 
+function isoDay(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+const LAPSED_DAYS = 90;
+
+/**
+ * Builds the real notification list from data the app already has -
+ * no new backend, no invented alerts. Each item is only produced when
+ * the underlying condition is genuinely true, so the bell's red dot
+ * means something instead of being permanently lit decoration.
+ */
+async function loadNotifications() {
+  const items = [];
+
+  const [logs, appts, patients] = await Promise.all([
+    api.listDailyLogs(1).catch(() => null),
+    api.listAppointments().catch(() => null),
+    api.listPatients().catch(() => null),
+  ]);
+
+  const today = isoDay(new Date());
+
+  // 1. Today's numbers not logged yet.
+  if (logs) {
+    const latest = logs[0];
+    if (!latest || latest.log_date !== today) {
+      items.push({
+        id: "no-log",
+        tone: "#e8871e",
+        title: "Today's numbers aren't logged yet",
+        body: "Add them from the Daily Log page - it takes under a minute.",
+      });
+    }
+  }
+
+  // 2. Appointments booked for today.
+  if (appts) {
+    const todays = appts.filter(
+      (a) => a.scheduled_at && a.scheduled_at.slice(0, 10) === today
+    );
+    if (todays.length > 0) {
+      items.push({
+        id: "todays-appts",
+        tone: "#2f6fed",
+        title: `${todays.length} appointment${todays.length === 1 ? "" : "s"} scheduled today`,
+        body: "See the full list on the Appointments page.",
+      });
+    }
+  }
+
+  // 3. Patients who haven't been seen in a long time. "Last seen" is
+  //    the most recent past appointment, falling back to their first
+  //    visit / record date when they've never had one booked.
+  if (patients && appts) {
+    const lastSeen = {};
+    appts.forEach((a) => {
+      const when = new Date(a.scheduled_at);
+      if (when > new Date()) return; // ignore future bookings
+      if (!lastSeen[a.patient_id] || when > lastSeen[a.patient_id]) {
+        lastSeen[a.patient_id] = when;
+      }
+    });
+
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - LAPSED_DAYS);
+
+    const lapsed = patients.filter((p) => {
+      const seen = lastSeen[p.id] || new Date(p.first_visit_at || p.created_at);
+      return seen < cutoff;
+    });
+
+    if (lapsed.length > 0) {
+      items.push({
+        id: "lapsed",
+        tone: "#6a5cf0",
+        title: `${lapsed.length} patient${lapsed.length === 1 ? "" : "s"} not seen in ${LAPSED_DAYS}+ days`,
+        body: "Worth a follow-up call - the list is on the Patients page.",
+      });
+    }
+  }
+
+  return items;
+}
+
 /**
  * TopBar
- * Page greeting on the left, date range / filter / notifications /
- * account switcher on the right. Wraps and compacts itself down to
- * phone widths; `onMenuClick` (wired by <Dashboard>) shows a hamburger
- * button below the tablet breakpoint to open the off-canvas sidebar.
+ * Page greeting on the left, date range / filter / notifications on
+ * the right. Wraps and compacts itself down to phone widths;
+ * `onMenuClick` (wired by <Dashboard>) shows a hamburger button below
+ * the tablet breakpoint to open the off-canvas sidebar.
  *
  * `dateRange` is either null (meaning "the default rolling window") or
  * { start, end } as "YYYY-MM-DD" strings. `onDateRangeChange` is called
@@ -81,6 +166,18 @@ export default function TopBar({
   const [showPicker, setShowPicker] = useState(false);
   const [draftStart, setDraftStart] = useState(dateRange?.start || "");
   const [draftEnd, setDraftEnd] = useState(dateRange?.end || "");
+  const [notes, setNotes] = useState(null); // null = still loading
+  const [showNotes, setShowNotes] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    loadNotifications()
+      .then((items) => alive && setNotes(items))
+      .catch(() => alive && setNotes([]));
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const rangeLabel = dateRange
     ? `${formatDate(dateRange.start)} - ${formatDate(dateRange.end)}`
@@ -206,16 +303,88 @@ export default function TopBar({
           </div>
         )}
 
-        <button className="bell" type="button" aria-label="Notifications">
+        <button
+          className="bell"
+          type="button"
+          aria-label="Notifications"
+          onClick={() => setShowNotes((v) => !v)}
+        >
           <Bell size={16} />
-          <span className="bell__dot" />
+          {/* Dot only when something is genuinely waiting - not decoration. */}
+          {notes && notes.length > 0 && <span className="bell__dot" />}
         </button>
 
-        <div className="doc-pill">
-          <img src={userAvatar || currentUser.avatarUrl} alt={userName} />
-          <span className="doc-pill__name">{userName}</span>
-          <ChevronDown size={14} color="#6b7a90" />
-        </div>
+        {showNotes && (
+          <div
+            style={{
+              position: "absolute",
+              top: "110%",
+              right: 0,
+              width: 290,
+              background: "#fff",
+              border: "1px solid #e2e6ee",
+              borderRadius: 12,
+              boxShadow: "0 10px 30px rgba(20,30,50,0.16)",
+              zIndex: 40,
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                padding: "11px 14px",
+                borderBottom: "1px solid #eef1f7",
+                fontSize: 11,
+                fontWeight: 800,
+                letterSpacing: "0.07em",
+                color: "#6b7a90",
+                textTransform: "uppercase",
+              }}
+            >
+              Notifications
+            </div>
+
+            {notes === null ? (
+              <div style={{ padding: "16px 14px", fontSize: 13, color: "#6b7a90" }}>
+                Checking...
+              </div>
+            ) : notes.length === 0 ? (
+              <div style={{ padding: "16px 14px", fontSize: 13, color: "#6b7a90", lineHeight: 1.5 }}>
+                Nothing needs your attention right now.
+              </div>
+            ) : (
+              notes.map((n, i) => (
+                <div
+                  key={n.id}
+                  style={{
+                    display: "flex",
+                    gap: 10,
+                    padding: "12px 14px",
+                    borderTop: i === 0 ? "none" : "1px solid #f2f4f9",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 7,
+                      height: 7,
+                      borderRadius: "50%",
+                      background: n.tone,
+                      flexShrink: 0,
+                      marginTop: 5,
+                    }}
+                  />
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#172033", lineHeight: 1.35 }}>
+                      {n.title}
+                    </div>
+                    <div style={{ fontSize: 11.5, color: "#6b7a90", marginTop: 2, lineHeight: 1.4 }}>
+                      {n.body}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
