@@ -107,13 +107,18 @@ function ClinicCard() {
             src={clinic.logo_url}
             alt=""
             style={{
-              width: 104,
-              height: 104,
-              // cover + a circular clip crops away the square white
-              // margin most logo files are saved with, so the mark
-              // itself is all that shows against the dark sidebar.
-              objectFit: "cover",
-              borderRadius: "50%",
+              // Shape-agnostic: the image keeps its own aspect ratio and
+              // is bounded on both axes, so a round emblem, a square
+              // badge and a wide wordmark all render correctly - a tall
+              // logo is capped by the height, a wide one by the width,
+              // and neither is ever cropped or distorted. No fixed box,
+              // no circular clip: both assumed a logo shape we don't
+              // control.
+              maxWidth: "100%",
+              maxHeight: 112,
+              width: "auto",
+              height: "auto",
+              objectFit: "contain",
               display: "block",
               flexShrink: 0,
             }}
