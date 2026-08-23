@@ -3,11 +3,14 @@ import Dashboard from "./components/Dashboard";
 import Login from "./components/Auth/Login";
 import DailyLog from "./components/DailyLog/DailyLog";
 import Patients from "./components/Patients/Patients";
+import Appointments from "./components/Appointments/Appointments";
 import { api } from "./api";
+
+const STANDALONE_VIEWS = ["daily-log", "patients", "appointments"];
 
 export default function App() {
   const [loggedIn, setLoggedIn] = useState(api.isLoggedIn());
-  const [view, setView] = useState("dashboard"); // "dashboard" | "daily-log" | "patients"
+  const [view, setView] = useState("dashboard"); // "dashboard" | "daily-log" | "patients" | "appointments"
   const [user, setUser] = useState(null);
   const [liveStats, setLiveStats] = useState(null);
   const [advisorAnswer, setAdvisorAnswer] = useState("");
@@ -56,7 +59,7 @@ export default function App() {
   }
 
   function handleNavigate(id) {
-    if (id === "daily-log" || id === "patients") {
+    if (STANDALONE_VIEWS.includes(id)) {
       setView(id);
     } else {
       setView("dashboard");
@@ -90,35 +93,19 @@ export default function App() {
     return <Login onLoggedIn={handleLoggedIn} />;
   }
 
-  if (view === "daily-log") {
+  if (STANDALONE_VIEWS.includes(view)) {
     return (
       <div style={{ padding: 24, background: "#f4f6fa", minHeight: "100vh" }}>
-        <DailyLog
-          doctorName={user?.name || "Doctor"}
-          onSaved={refresh}
-        />
+        {view === "daily-log" && <DailyLog doctorName={user?.name || "Doctor"} onSaved={refresh} />}
+        {view === "patients" && <Patients />}
+        {view === "appointments" && <Appointments />}
+
         <div style={{ textAlign: "center", marginTop: 16 }}>
-          {user?.role !== "staff" && (
+          {!(view === "daily-log" && user?.role === "staff") && (
             <button onClick={() => setView("dashboard")} style={backLinkStyle}>
               ← Back to Dashboard
             </button>
           )}
-          <button onClick={handleLogout} style={backLinkStyle}>
-            Log out
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (view === "patients") {
-    return (
-      <div style={{ padding: 24, background: "#f4f6fa", minHeight: "100vh" }}>
-        <Patients />
-        <div style={{ textAlign: "center", marginTop: 16 }}>
-          <button onClick={() => setView("dashboard")} style={backLinkStyle}>
-            ← Back to Dashboard
-          </button>
           <button onClick={handleLogout} style={backLinkStyle}>
             Log out
           </button>

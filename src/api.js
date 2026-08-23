@@ -135,4 +135,27 @@ export const api = {
   async deletePatient(id) {
     return request(`/patients/${id}`, { method: "DELETE" });
   },
+
+  // ---------- Appointments ----------
+  async listAppointments() {
+    return request("/appointments");
+  },
+
+  async addAppointment({ patientId, scheduledAt }) {
+    return request("/appointments", {
+      method: "POST",
+      body: { patient_id: patientId, scheduled_at: scheduledAt },
+    });
+  },
+
+  async updateAppointmentStatus(id, status) {
+    return request(`/appointments/${id}/status`, {
+      method: "PATCH",
+      body: { status },
+    });
+  },
+
+  async deleteAppointment(id) {
+    return request(`/appointments/${id}`, { method: "DELETE" });
+  },
 };
