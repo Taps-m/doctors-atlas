@@ -1,5 +1,5 @@
 import React from "react";
-import { Target, X, LogOut } from "lucide-react";
+import { Compass, X, LogOut } from "lucide-react";
 import { getIcon } from "./iconMap";
 import { navItems } from "./data";
 import { api } from "../../api";
@@ -27,6 +27,10 @@ function NavItem({ icon, label, active, onClick }) {
  * content) so it's always on screen without scrolling, on any page.
  * It calls the API directly and reloads - simplest way to reset all
  * app state without threading a logout handler through every page.
+ *
+ * The brand mark gets its own gradient badge + divider (fully inline
+ * styled, self-contained here) rather than leaning on the shared
+ * stylesheet's plain ".brand__mark" look.
  *
  * Responsive behavior:
  * - Desktop/tablet (>= 768px): fixed-width column, always visible.
@@ -59,13 +63,43 @@ export default function Sidebar({
       />
 
       <aside className={`sidebar ${isOpen ? "sidebar--open" : ""}`}>
-        <div className="brand">
-          <div className="brand__mark">
-            <Target size={18} strokeWidth={2.4} />
+        <div
+          className="brand"
+          style={{
+            paddingBottom: 18,
+            marginBottom: 8,
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+          }}
+        >
+          <div
+            className="brand__mark"
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: 11,
+              background: "linear-gradient(135deg, #1a9e8f 0%, #14746a 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 4px 14px rgba(26,158,143,0.45)",
+              flexShrink: 0,
+            }}
+          >
+            <Compass size={19} strokeWidth={2.2} color="#fff" />
           </div>
           <div className="brand__text">
-            <div className="brand__eyebrow">DOCTORS</div>
-            <div className="brand__name">ATLAS</div>
+            <div
+              className="brand__eyebrow"
+              style={{ letterSpacing: "0.16em", opacity: 0.6, fontSize: 10.5 }}
+            >
+              DOCTORS
+            </div>
+            <div className="brand__name" style={{ display: "flex", alignItems: "baseline" }}>
+              ATLAS
+              <sup style={{ fontSize: "0.4em", fontWeight: 600, marginLeft: 2, opacity: 0.7 }}>
+                TM
+              </sup>
+            </div>
           </div>
 
           <button
