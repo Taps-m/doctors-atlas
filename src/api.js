@@ -185,8 +185,13 @@ export const api = {
     return request("/settings/clinic");
   },
 
-  async updateClinic({ name }) {
-    return request("/settings/clinic", { method: "PATCH", body: { name } });
+  // Both fields are optional - send either or both. Pass logoUrl as an
+  // empty string to remove an existing logo.
+  async updateClinic({ name, logoUrl } = {}) {
+    const body = {};
+    if (name !== undefined) body.name = name;
+    if (logoUrl !== undefined) body.logo_url = logoUrl;
+    return request("/settings/clinic", { method: "PATCH", body });
   },
 
   async listStaff() {

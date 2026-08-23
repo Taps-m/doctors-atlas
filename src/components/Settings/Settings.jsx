@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Camera, Copy, Check, Trash2, UserCircle2 } from "lucide-react";
+import { Camera, Copy, Check, Trash2, UserCircle2, Building2, Upload } from "lucide-react";
 import { api } from "../../api";
 import "./Settings.css";
 
@@ -68,6 +68,7 @@ export default function Settings() {
   // Clinic & team (doctor/admin only)
   const [clinic, setClinic] = useState(null);
   const [clinicName, setClinicName] = useState("");
+  const [clinicLogo, setClinicLogo] = useState(""); // "" = no logo set
   const [clinicSaving, setClinicSaving] = useState(false);
   const [clinicMsg, setClinicMsg] = useState("");
   const [staff, setStaff] = useState(null);
@@ -95,6 +96,7 @@ export default function Settings() {
       .then((c) => {
         setClinic(c);
         setClinicName(c.name);
+        setClinicLogo(c.logo_url || "");
       })
       .catch((err) => setClinicMsg(err.message || "Could not load clinic details"));
     api
@@ -112,6 +114,17 @@ export default function Settings() {
       setAvatarUrl(dataUrl);
     } catch {
       setProfileErr("Could not read that image - try a different file");
+    }
+  }
+
+  async function handlePickClinicLogo(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const dataUrl = await resizeImage(file);
+      setClinicLogo(dataUrl);
+    } catch {
+      setClinicMsg("Could not read that image - try a different file");
     }
   }
 
@@ -158,11 +171,15 @@ export default function Settings() {
     setClinicSaving(true);
     setClinicMsg("");
     try {
-      const updated = await api.updateClinic({ name: clinicName.trim() });
+      const updated = await api.updateClinic({
+        name: clinicName.trim(),
+        logoUrl: clinicLogo, // "" clears it, which the API treats as remove
+      });
       setClinic(updated);
+      setClinicLogo(updated.logo_url || "");
       setClinicMsg("Saved.");
     } catch (err) {
-      setClinicMsg(err.message || "Could not save clinic name");
+      setClinicMsg(err.message || "Could not save your clinic details");
     } finally {
       setClinicSaving(false);
     }
@@ -315,9 +332,67 @@ export default function Settings() {
               <label>Clinic name</label>
               <input value={clinicName} onChange={(e) => setClinicName(e.target.value)} required />
             </div>
+
+            {/* Entirely optional - the clinic works fine with no logo,
+                and the sidebar falls back to a generic icon. */}
+            <div className="set-field">
+              <label>Clinic logo (optional)</label>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 4 }}>
+                <div
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: 12,
+                    background: clinicLogo ? "#fff" : "#f1f4f9",
+                    border: "1px solid #e2e6ee",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    overflow: "hidden",
+                    flexShrink: 0,
+                  }}
+                >
+                  {clinicLogo ? (
+                    <img
+                      src={clinicLogo}
+                      alt="Clinic logo"
+                      style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                    />
+                  ) : (
+                    <Building2 size={20} color="#94a0b4" />
+                  )}
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <label
+                    className="set-btn set-btn--ghost"
+                    style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}
+                  >
+                    <Upload size={14} /> {clinicLogo ? "Change logo" : "Upload logo"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePickClinicLogo}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+                  {clinicLogo && (
+                    <button
+                      type="button"
+                      className="set-btn set-btn--ghost"
+                      onClick={() => setClinicLogo("")}
+                      style={{ fontSize: 12 }}
+                    >
+                      Remove logo
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {clinicMsg && <div className={clinicMsg === "Saved." ? "set-success" : "set-error"}>{clinicMsg}</div>}
             <button type="submit" className="set-btn set-btn--primary" disabled={clinicSaving}>
-              {clinicSaving ? "Saving..." : "Save Clinic Name"}
+              {clinicSaving ? "Saving..." : "Save Clinic Details"}
             </button>
           </form>
 
