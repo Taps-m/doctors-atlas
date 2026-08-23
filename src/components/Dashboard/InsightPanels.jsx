@@ -228,6 +228,8 @@ function WhatNeedsAttention({ onFlag }) {
         }
         const flagged = worst && worst.badness > 0 ? worst : null;
         setState({ loading: false, flagged, error: "" });
+        // null here means "checked, nothing's wrong" - distinct from
+        // the AskAboutIt panel's own not-ready-yet state (undefined).
         onFlag && onFlag(flagged);
       })
       .catch((err) => {
@@ -282,24 +284,38 @@ function WhatNeedsAttention({ onFlag }) {
 }
 
 /**
- * AskAboutIt
- * The real, guardrailed follow-through on "what should you do" - a
- * button that asks your actual AI Advisor about whatever WhatNeedsAttention
- * just flagged (or a general check-in if nothing was flagged), and shows
- * the real answer inline. No fabricated action plan, no fake buttons.
+ * SuggestedFocus
+ * The real, guardrailed follow-through on "what should you do" -
+ * automatically asks your actual AI Advisor for one or two concrete
+ * things worth trying, based on whatever WhatNeedsAttention flagged
+ * (or a general check-in if nothing was flagged), and shows the real
+ * answer as soon as it loads. No button to click through first - that
+ * was just a redundant doorway to the AI Advisor bar already on this
+ * page. This card is the proactive nudge; the bar below is for the
+ * doctor's own open-ended questions.
  */
-function AskAboutIt({ flagged }) {
+function SuggestedFocus({ flagged }) {
   const [answer, setAnswer] = useState("");
   const [asking, setAsking] = useState(false);
   const [error, setError] = useState("");
+  const [asked, setAsked] = useState(false);
 
-  async function handleAsk() {
+  useEffect(() => {
+    // flagged is undefined until WhatNeedsAttention finishes its own
+    // check - wait for that first real value (object or null) before
+    // asking, and only ever auto-ask once.
+    if (flagged === undefined || asked) return;
+    setAsked(true);
+    askNow();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flagged]);
+
+  async function askNow() {
     setAsking(true);
     setError("");
-    setAnswer("");
     const question = flagged
-      ? `${METRIC_LABEL[flagged.key]} is ${flagged.change_pct < 0 ? "down" : "up"} ${Math.abs(flagged.change_pct)}% vs the previous period. What's worth considering here?`
-      : "What's the one thing most worth focusing on right now?";
+      ? `In one or two sentences, suggest one or two concrete things worth trying this week to improve ${METRIC_LABEL[flagged.key].toLowerCase()} (it's ${flagged.change_pct < 0 ? "down" : "up"} ${Math.abs(flagged.change_pct)}% vs the previous period).`
+      : "In one or two sentences, suggest one or two concrete things worth trying this week to strengthen the practice.";
     try {
       const res = await api.askAdvisor(question);
       setAnswer(res.answer);
@@ -319,26 +335,20 @@ function AskAboutIt({ flagged }) {
         <span>WHAT SHOULD YOU DO?</span>
       </div>
 
-      {!answer && !asking && (
-        <p style={{ color: "#6b7a90", fontSize: 13.5, margin: "0 0 14px", lineHeight: 1.6 }}>
-          {flagged
-            ? `Ask your AI Advisor about ${METRIC_LABEL[flagged.key].toLowerCase()} - it'll answer using your real numbers, not a guess.`
-            : "Ask your AI Advisor what's most worth focusing on right now."}
-        </p>
+      {(flagged === undefined || asking) && (
+        <p style={{ color: "#6b7a90", fontSize: 13 }}>Thinking...</p>
       )}
-
-      {asking && <p style={{ color: "#6b7a90", fontSize: 13 }}>Thinking...</p>}
       {error && <p style={{ color: "#b3272c", fontSize: 13 }}>{error}</p>}
-      {answer && <p style={{ fontSize: 13.5, lineHeight: 1.6, margin: "0 0 14px" }}>{answer}</p>}
+      {answer && !asking && <p style={{ fontSize: 13.5, lineHeight: 1.6, margin: "0 0 12px" }}>{answer}</p>}
 
-      {!asking && (
+      {!asking && flagged !== undefined && (
         <button
           type="button"
-          className="btn-primary"
-          onClick={handleAsk}
-          style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+          className="btn-secondary"
+          onClick={askNow}
+          style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12 }}
         >
-          <Sparkles size={14} /> {answer ? "Ask again" : "Ask the AI Advisor"} <Send size={12} />
+          <Sparkles size={13} /> Suggest again <Send size={11} />
         </button>
       )}
     </div>
@@ -355,7 +365,9 @@ function AskAboutIt({ flagged }) {
  * Experiment" card for a feature that was deliberately dropped.
  */
 export default function InsightPanels() {
-  const [flagged, setFlagged] = useState(null);
+  // undefined = WhatNeedsAttention hasn't reported in yet; null = it
+  // checked and nothing's flagged; object = a specific metric flagged.
+  const [flagged, setFlagged] = useState(undefined);
 
   return (
     <>
@@ -365,7 +377,7 @@ export default function InsightPanels() {
       </div>
       <div className="panels" style={{ gridTemplateColumns: "repeat(2, 1fr)", marginTop: 16 }}>
         <WhatNeedsAttention onFlag={setFlagged} />
-        <AskAboutIt flagged={flagged} />
+        <SuggestedFocus flagged={flagged} />
       </div>
     </>
   );

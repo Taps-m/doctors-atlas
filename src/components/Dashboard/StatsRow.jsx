@@ -4,7 +4,7 @@ import Sparkline from "./Sparkline";
 import { getIcon } from "./iconMap";
 import { statCards, practiceHealth } from "./data";
 
-function StatCard({ icon, iconBg, label, value, delta, deltaUp, sparkColor, data }) {
+function StatCard({ icon, iconBg, label, value, delta, deltaUp, sparkColor, data, vsLabel }) {
   const Icon = getIcon(icon);
   return (
     <div className="stat-card">
@@ -18,7 +18,7 @@ function StatCard({ icon, iconBg, label, value, delta, deltaUp, sparkColor, data
       <div className={`stat-card__delta ${deltaUp ? "up" : "down"}`}>
         {deltaUp ? <ArrowUp size={12} /> : <ArrowDown size={12} />}
         {delta}
-        <span className="stat-card__vs">vs Jul 1 – 17</span>
+        <span className="stat-card__vs">{vsLabel}</span>
       </div>
       <div className="stat-card__spark">
         <Sparkline data={data} color={sparkColor} />
@@ -77,6 +77,27 @@ function formatValue(id, value) {
   return `${Math.round(value)}`;
 }
 
+function formatShortDate(d) {
+  return d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+}
+
+/**
+ * Works out the real "vs <dates>" label from the /stats response's
+ * period, instead of the fixed "vs Jul 1 - 17" text this used to show
+ * no matter what date range was actually being compared against. The
+ * previous-period window is the same length as the current one,
+ * immediately before it - matching the backend's own comparison logic.
+ */
+function comparisonLabel(period) {
+  if (!period?.start || !period?.end) return "vs previous period";
+  const start = new Date(period.start);
+  const end = new Date(period.end);
+  const lengthDays = Math.max(Math.round((end - start) / 86400000), 1);
+  const prevEnd = new Date(start.getTime() - 86400000);
+  const prevStart = new Date(start.getTime() - lengthDays * 86400000);
+  return `vs ${formatShortDate(prevStart)} – ${formatShortDate(prevEnd)}`;
+}
+
 /**
  * StatsRow
  * Renders the four KPI sparkline cards plus the Practice Health ring.
@@ -86,6 +107,8 @@ function formatValue(id, value) {
  * is passed in - falls back to the static mock values otherwise.
  */
 export default function StatsRow({ liveStats }) {
+  const vsLabel = liveStats?.period ? comparisonLabel(liveStats.period) : "vs previous period";
+
   const cards = statCards.map((card) => {
     const liveKey = LIVE_KEY[card.id];
     const live = liveStats && liveKey ? liveStats[liveKey] : null;
@@ -104,14 +127,14 @@ export default function StatsRow({ liveStats }) {
         score: liveStats.practice_health.value,
         max: 100,
         deltaLabel: `${Math.abs(liveStats.practice_health.change_pts)} pts`,
-        deltaSub: "vs last month",
+        deltaSub: vsLabel,
       }
     : practiceHealth;
 
   return (
     <div className="stats-row">
       {cards.map((card) => (
-        <StatCard key={card.id} {...card} />
+        <StatCard key={card.id} {...card} vsLabel={vsLabel} />
       ))}
       <PracticeHealthRing
         score={health.score}
