@@ -28,8 +28,11 @@ function StatCard({ icon, iconBg, label, value, delta, deltaUp, sparkColor, data
           <span className="stat-card__vs">{vsLabel}</span>
         </div>
       ) : (
+        // Two different silences, and they must not look alike: still
+        // waiting on the server, versus loaded but with no earlier
+        // period to compare against. Neither is a green 0%.
         <div className="stat-card__delta" style={{ color: "#9aa5b5", fontWeight: 500 }}>
-          Loading…
+          {hasLive ? "No comparison yet" : "Loading…"}
         </div>
       )}
 
@@ -43,7 +46,7 @@ function StatCard({ icon, iconBg, label, value, delta, deltaUp, sparkColor, data
   );
 }
 
-function PracticeHealthRing({ score, max, deltaLabel, deltaSub }) {
+function PracticeHealthRing({ score, max, deltaLabel, deltaSub, deltaUp }) {
   const RADIUS = 46;
   const CIRC = 2 * Math.PI * RADIUS;
   // No score yet = an empty ring and a dash, never a stand-in number.
@@ -76,13 +79,19 @@ function PracticeHealthRing({ score, max, deltaLabel, deltaSub }) {
         </div>
       </div>
       {deltaLabel ? (
-        <div className="health-card__delta">
-          <ArrowUp size={12} /> {deltaLabel}{" "}
+        // The arrow and colour follow the actual sign. This used to be
+        // a hardcoded up-arrow wrapped around Math.abs, so a health
+        // score that FELL 15 points was shown as a green "15 pts" gain.
+        <div
+          className="health-card__delta"
+          style={{ color: deltaUp ? undefined : "#e5484d" }}
+        >
+          {deltaUp ? <ArrowUp size={12} /> : <ArrowDown size={12} />} {deltaLabel}{" "}
           <span className="health-card__vs">{deltaSub}</span>
         </div>
       ) : (
         <div className="health-card__delta" style={{ color: "#9aa5b5", fontWeight: 500 }}>
-          Loading…
+          {hasScore ? "No comparison yet" : "Loading…"}
         </div>
       )}
     </div>
@@ -150,23 +159,31 @@ export default function StatsRow({ liveStats }) {
       return { ...card, value: "—", delta: null, deltaUp: true };
     }
 
+    // change_pct is null when there's no earlier period to compare
+    // against. Math.abs(null) is 0 and null >= 0 is true, so without
+    // this guard a clinic with no history saw a green "0%" on every
+    // card - the most reassuring possible way to say "we don't know".
+    const noComparison = live.change_pct === null || live.change_pct === undefined;
+
     return {
       ...card,
       value: formatValue(card.id, live.value),
-      delta: `${Math.abs(live.change_pct)}%`,
-      deltaUp: live.change_pct >= 0,
+      delta: noComparison ? null : `${Math.abs(live.change_pct)}%`,
+      deltaUp: noComparison ? true : live.change_pct >= 0,
     };
   });
 
   const ph = liveStats?.practice_health;
+  const hasHealthDelta = ph && ph.change_pts !== null && ph.change_pts !== undefined;
   const health = ph
     ? {
         score: ph.value,
         max: 100,
-        deltaLabel: `${Math.abs(ph.change_pts)} pts`,
+        deltaLabel: hasHealthDelta ? `${Math.abs(ph.change_pts)} pts` : null,
+        deltaUp: hasHealthDelta ? ph.change_pts >= 0 : true,
         deltaSub: vsLabel,
       }
-    : { score: null, max: 100, deltaLabel: null, deltaSub: "" };
+    : { score: null, max: 100, deltaLabel: null, deltaUp: true, deltaSub: "" };
 
   return (
     <div className="stats-row">
@@ -177,6 +194,7 @@ export default function StatsRow({ liveStats }) {
         score={health.score}
         max={health.max}
         deltaLabel={health.deltaLabel}
+        deltaUp={health.deltaUp}
         deltaSub={health.deltaSub}
       />
     </div>

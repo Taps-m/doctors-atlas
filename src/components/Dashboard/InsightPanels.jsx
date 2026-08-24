@@ -7,6 +7,7 @@ const METRIC_LABEL = {
   revenue: "Revenue",
   repeat_visits: "Repeat visits",
   no_show_rate: "No-show rate",
+  practice_health: "Practice health",
 };
 
 // Whether a rising number is good news for this metric - used to work
@@ -22,6 +23,7 @@ const HIGHER_IS_BETTER = {
 function formatMetricValue(key, value) {
   if (key === "revenue") return formatMoney(value);
   if (key === "repeat_visits" || key === "no_show_rate") return `${Math.round(value)}%`;
+  if (key === "practice_health") return `${Math.round(value)} out of 100`;
   return `${Math.round(value)}`;
 }
 
@@ -240,6 +242,43 @@ function TodayAppointments() {
  * actually trending badly, it says so honestly rather than inventing
  * a problem to display.
  */
+/**
+ * Levels that deserve attention regardless of which way they moved.
+ * Without these the card only noticed CHANGE, so a clinic losing one
+ * patient in three to no-shows was told "nothing's trending the wrong
+ * way" - true, and useless. Thresholds are deliberately conservative:
+ * this should flag real problems, not nag.
+ */
+/**
+ * Severity is expressed as "how far past the line, relative to the
+ * line" so different metrics can be compared. Raw distances can't be:
+ * a no-show rate of 33% is 33 points from zero while repeat visits of
+ * 17% is 83 points from 100, which would rank a mildly low return rate
+ * above one patient in three not turning up.
+ */
+const LEVEL_ALERTS = {
+  no_show_rate: {
+    threshold: 15,
+    isBad: (v) => v >= 15,
+    severity: (v) => (v - 15) / 15,
+    // Only meaningful once there's history: a brand-new clinic has a
+    // low repeat rate because nobody has had time to return yet.
+    needsBaseline: false,
+    say: (v) =>
+      `Your no-show rate is ${Math.round(v)}% - roughly one in ${Math.max(2, Math.round(100 / v))} booked patients isn't arriving.`,
+  },
+  repeat_visits: {
+    threshold: 20,
+    isBad: (v) => v < 20,
+    severity: (v) => (20 - v) / 20,
+    needsBaseline: true,
+    say: (v) =>
+      `Only ${Math.round(v)}% of your consultations are repeat visits - most patients aren't coming back.`,
+  },
+};
+
+const HEALTH_ALERT_BELOW = 50;
+
 function WhatNeedsAttention({ onFlag }) {
   const [state, setState] = useState({ loading: true, flagged: null, error: "" });
 
@@ -247,21 +286,70 @@ function WhatNeedsAttention({ onFlag }) {
     api
       .getStats({})
       .then((stats) => {
-        let worst = null;
-        for (const key of Object.keys(HIGHER_IS_BETTER)) {
+        // 1. Something bad in absolute terms, today, regardless of trend.
+        const hasBaseline = stats.has_baseline !== false;
+
+        let levelIssue = null;
+        for (const key of Object.keys(LEVEL_ALERTS)) {
+          const rule = LEVEL_ALERTS[key];
           const stat = stats[key];
-          if (!stat) continue;
-          const higherIsBetter = HIGHER_IS_BETTER[key];
-          // "badness" > 0 means this metric moved the wrong way.
-          const badness = higherIsBetter ? -stat.change_pct : stat.change_pct;
-          if (!worst || badness > worst.badness) {
-            worst = { key, badness, value: stat.value, change_pct: stat.change_pct };
+          if (!stat || typeof stat.value !== "number") continue;
+          if (rule.needsBaseline && !hasBaseline) continue;
+          if (!rule.isBad(stat.value)) continue;
+
+          const severity = rule.severity(stat.value);
+          if (!levelIssue || severity > levelIssue.severity) {
+            levelIssue = {
+              key,
+              severity,
+              value: stat.value,
+              change_pct: stat.change_pct,
+              headline: rule.say(stat.value),
+              kind: "level",
+            };
           }
         }
-        const flagged = worst && worst.badness > 0 ? worst : null;
+
+        const health = stats.practice_health;
+        if (!levelIssue && health && health.value < HEALTH_ALERT_BELOW) {
+          levelIssue = {
+            key: "practice_health",
+            severity: (HEALTH_ALERT_BELOW - health.value) / HEALTH_ALERT_BELOW,
+            value: health.value,
+            change_pct: null,
+            headline: `Your practice health score is ${health.value} out of 100.`,
+            kind: "level",
+          };
+        }
+
+        // 2. Otherwise, whichever metric moved the wrong way. Skipped
+        //    entirely when there's no baseline - a null change is not
+        //    a trend, and treating it as one produced false calm.
+        let worst = null;
+        if (hasBaseline) {
+          for (const key of Object.keys(HIGHER_IS_BETTER)) {
+            const stat = stats[key];
+            if (!stat || stat.change_pct === null || stat.change_pct === undefined) continue;
+            const badness = HIGHER_IS_BETTER[key] ? -stat.change_pct : stat.change_pct;
+            if (!worst || badness > worst.badness) {
+              worst = {
+                key,
+                badness,
+                value: stat.value,
+                change_pct: stat.change_pct,
+                kind: "trend",
+              };
+            }
+          }
+          if (worst && worst.badness <= 0) worst = null;
+        }
+
+        // A bad level beats a bad trend: it's true right now, and it's
+        // the thing a doctor can act on today.
+        const flagged = levelIssue || worst;
         setState({ loading: false, flagged, error: "" });
         // null here means "checked, nothing's wrong" - distinct from
-        // the AskAboutIt panel's own not-ready-yet state (undefined).
+        // the SuggestedFocus panel's not-ready-yet state (undefined).
         onFlag && onFlag(flagged);
       })
       .catch((err) => {
@@ -271,7 +359,14 @@ function WhatNeedsAttention({ onFlag }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const priority = !state.flagged ? null : state.flagged.badness >= 15 ? "HIGH" : state.flagged.badness >= 5 ? "MODERATE" : "LOW";
+  const f = state.flagged;
+  // Level severity is a ratio (1.0 = twice the acceptable threshold);
+  // trend badness is a percentage move. Scored on their own scales.
+  const priority = !f
+    ? null
+    : f.kind === "level"
+    ? f.severity >= 1 ? "HIGH" : f.severity >= 0.4 ? "MODERATE" : "LOW"
+    : f.badness >= 15 ? "HIGH" : f.badness >= 5 ? "MODERATE" : "LOW";
 
   return (
     <div className="panel">
@@ -281,23 +376,36 @@ function WhatNeedsAttention({ onFlag }) {
         <p style={{ color: "#6b7a90", fontSize: 13 }}>Loading...</p>
       ) : state.error ? (
         <p style={{ color: "#b3272c", fontSize: 13 }}>{state.error}</p>
-      ) : !state.flagged ? (
+      ) : !f ? (
         <>
           <h3 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 700 }}>
-            Nothing's trending the wrong way right now.
+            Nothing needs your attention right now.
           </h3>
           <p style={{ color: "#6b7a90", fontSize: 13, margin: 0 }}>
-            Every tracked metric is flat or improving compared to the previous period.
+            No metric is at a concerning level, and none is moving the wrong way.
           </p>
+        </>
+      ) : f.kind === "level" ? (
+        <>
+          {/* A problem that's true today, whether or not it moved. */}
+          <h3 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 700 }}>{f.headline}</h3>
+          <p style={{ color: "#6b7a90", fontSize: 13, margin: "0 0 14px" }}>
+            This is worth looking at regardless of which way it's trending.
+          </p>
+          {priority && (
+            <div className="priority-pill">
+              <AlertTriangle size={13} /> PRIORITY: {priority}
+            </div>
+          )}
         </>
       ) : (
         <>
           <h3 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 700 }}>
-            {METRIC_LABEL[state.flagged.key]} is {state.flagged.change_pct < 0 ? "down" : "up"}{" "}
-            {Math.abs(state.flagged.change_pct)}% compared to the previous period.
+            {METRIC_LABEL[f.key]} is {f.change_pct < 0 ? "down" : "up"}{" "}
+            {Math.abs(f.change_pct)}% compared to the previous period.
           </h3>
           <p style={{ color: "#6b7a90", fontSize: 13, margin: "0 0 14px" }}>
-            Currently at {formatMetricValue(state.flagged.key, state.flagged.value)}.
+            Currently at {formatMetricValue(f.key, f.value)}.
           </p>
           {priority && (
             <div className="priority-pill">
@@ -340,9 +448,20 @@ function SuggestedFocus({ flagged }) {
   async function askNow() {
     setAsking(true);
     setError("");
-    const question = flagged
-      ? `Answer in at most 2 short sentences (35 words max) - no preamble, don't restate the numbers. Suggest one or two concrete things worth trying this week to improve ${METRIC_LABEL[flagged.key].toLowerCase()} (it's ${flagged.change_pct < 0 ? "down" : "up"} ${Math.abs(flagged.change_pct)}% vs the previous period).`
-      : "Answer in at most 2 short sentences (35 words max) - no preamble, no welcome message. Suggest one or two concrete things worth trying this week to strengthen the practice.";
+    const PREFIX =
+      "Answer in at most 2 short sentences (35 words max) - no preamble, don't restate the numbers.";
+    const label = (METRIC_LABEL[flagged?.key] || "the practice").toLowerCase();
+
+    let question;
+    if (!flagged) {
+      question = `${PREFIX} Suggest one or two concrete things worth trying this week to strengthen the practice.`;
+    } else if (flagged.kind === "level") {
+      // Describe the level, not a change - there may not be one, and
+      // Math.abs(null) would have claimed a confident "up 0%".
+      question = `${PREFIX} Suggest one or two concrete things worth trying this week to improve ${label}, which is currently at ${formatMetricValue(flagged.key, flagged.value)}.`;
+    } else {
+      question = `${PREFIX} Suggest one or two concrete things worth trying this week to improve ${label} (it's ${flagged.change_pct < 0 ? "down" : "up"} ${Math.abs(flagged.change_pct)}% vs the previous period).`;
+    }
     try {
       const res = await api.askAdvisor(question);
       setAnswer(res.answer);

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Mail, ArrowDown, ArrowUp } from "lucide-react";
-import { getIcon } from "./iconMap";
-import { testimonial, howItWorksSteps } from "./data";
+import { testimonial } from "./data";
 import { api } from "../../api";
 
 /**
@@ -126,42 +125,22 @@ function NewEnquiriesCard() {
   );
 }
 
-function HowItWorks() {
-  return (
-    <div className="howit">
-      <h4>How It Works</h4>
-      <p>A continuous cycle of improvement</p>
-
-      {howItWorksSteps.map((step) => {
-        const Icon = getIcon(step.icon);
-        return (
-          <div className="howit-step" key={step.step}>
-            <div className="howit-step__line" />
-            <span className="howit-step__icon" style={{ background: step.color }}>
-              <Icon size={14} />
-            </span>
-            <div>
-              <div className="howit-step__title">{step.title}</div>
-              <div className="howit-step__desc">{step.desc}</div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 /**
  * RightColumn
- * Profile photo, a real New Enquiries stat, and the How-It-Works
- * explainer.
+ * Who's signed in, and one real live number.
+ *
+ * The "How It Works" explainer that used to sit here has been removed.
+ * It was a five-step product pitch occupying permanent space on every
+ * page load, and its fourth step advertised "our built-in experiment
+ * tools" - a feature that was dropped and does not exist. The real
+ * walkthrough now lives on the "How to use Atlas" page in the sidebar,
+ * where someone can go when they actually want it.
  */
 export default function RightColumn({ userAvatar, userName }) {
   return (
     <div className="right-col">
       <ProfileCard avatarUrl={userAvatar} name={userName} />
       <NewEnquiriesCard />
-      <HowItWorks />
     </div>
   );
 }
