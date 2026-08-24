@@ -46,6 +46,51 @@ function Card({ title, subtitle, children }) {
   );
 }
 
+// Part-day blocking. The doctor thinks in "morning" and "afternoon",
+// not in 24-hour boundaries, so the presets do that translation and
+// Custom is there for the days that don't fit either.
+// End is exclusive, so an afternoon block ending 23:59 covers every
+// remaining slot (the latest a slot can start is 23:30).
+const BLOCK_RANGES = {
+  all: () => ({ start: null, end: null }),
+  morning: () => ({ start: "00:00", end: "13:00" }),
+  afternoon: () => ({ start: "13:00", end: "23:59" }),
+  custom: (from, to) => ({ start: from, end: to }),
+};
+
+const BLOCK_CHOICES = [
+  { id: "all", label: "All day" },
+  { id: "morning", label: "Morning" },
+  { id: "afternoon", label: "Afternoon" },
+  { id: "custom", label: "Custom" },
+];
+
+// "13:30" -> "1:30 PM". Written out rather than using toLocaleTimeString
+// so the result is the same on every phone regardless of its locale.
+function to12h(hhmm) {
+  if (!hhmm) return "";
+  const [h, m] = hhmm.split(":").map(Number);
+  const suffix = h < 12 ? "AM" : "PM";
+  const hour = h % 12 === 0 ? 12 : h % 12;
+  return `${hour}:${String(m).padStart(2, "0")} ${suffix}`;
+}
+
+// What one blocked row should read as in the list.
+function blockLabel(b) {
+  if (!b.start_time) return "All day";
+  if (!b.end_time) return to12h(b.start_time) + " only";
+  if (b.start_time === "00:00" && b.end_time === "13:00") return "Morning";
+  if (b.start_time === "13:00" && b.end_time === "23:59") return "Afternoon";
+  return `${to12h(b.start_time)} – ${to12h(b.end_time)}`;
+}
+
+// "2026-08-30" -> "Sun 30 Aug" - friendlier than the raw ISO date.
+function prettyDate(iso) {
+  const d = new Date(`${iso}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+}
+
 export default function BookingSetup() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -62,6 +107,10 @@ export default function BookingSetup() {
 
   const [blockDate, setBlockDate] = useState("");
   const [blockReason, setBlockReason] = useState("");
+  // "all" | "morning" | "afternoon" | "custom"
+  const [blockWhen, setBlockWhen] = useState("all");
+  const [blockFrom, setBlockFrom] = useState("09:00");
+  const [blockTo, setBlockTo] = useState("13:00");
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const shortUrl = `${origin}/booking`;
@@ -156,10 +205,23 @@ export default function BookingSetup() {
   async function handleAddBlock(e) {
     e.preventDefault();
     if (!blockDate) return;
+    const range = BLOCK_RANGES[blockWhen] || (() => ({ start: null, end: null }));
+    const { start, end } = range(blockFrom, blockTo);
+    if (start && end && end <= start) {
+      setError("The end time has to be after the start time");
+      return;
+    }
     try {
-      await api.addBlockedDate({ date: blockDate, reason: blockReason });
+      setError("");
+      await api.addBlockedDate({
+        date: blockDate,
+        startTime: start,
+        endTime: end,
+        reason: blockReason,
+      });
       setBlockDate("");
       setBlockReason("");
+      setBlockWhen("all");
       await load();
     } catch (err) {
       setError(err.message || "Could not block that date");
@@ -367,14 +429,63 @@ export default function BookingSetup() {
       </Card>
 
       {/* ---- Days off ---- */}
-      <Card title="Days you're away" subtitle="Block a date and no one can book it — holidays, leave, anything.">
-        <form onSubmit={handleAddBlock} style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: blocked.length ? 14 : 0 }}>
-          <input type="date" value={blockDate} onChange={(e) => setBlockDate(e.target.value)}
-                 style={{ ...inputStyle, width: 170 }} required />
-          <input value={blockReason} onChange={(e) => setBlockReason(e.target.value)}
-                 placeholder="Reason (optional)" maxLength={60}
-                 style={{ ...inputStyle, flex: "1 1 160px" }} />
-          <button type="submit" style={btnGhost}><Plus size={15} /> Block</button>
+      <Card title="Time you're away" subtitle="Block a whole day or just part of one — a holiday, a conference, an afternoon off.">
+        <form onSubmit={handleAddBlock} style={{ marginBottom: blocked.length ? 16 : 0 }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <input type="date" value={blockDate} onChange={(e) => setBlockDate(e.target.value)}
+                   style={{ ...inputStyle, width: 170 }} required />
+            <input value={blockReason} onChange={(e) => setBlockReason(e.target.value)}
+                   placeholder="Reason (optional)" maxLength={60}
+                   style={{ ...inputStyle, flex: "1 1 160px" }} />
+          </div>
+
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 10 }}>
+            {BLOCK_CHOICES.map((c) => {
+              const on = blockWhen === c.id;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setBlockWhen(c.id)}
+                  aria-pressed={on}
+                  style={{
+                    border: on ? "1.5px solid #2f6fed" : "1.5px solid #dfe4ee",
+                    background: on ? "#eaf1ff" : "#fff",
+                    color: on ? "#1b4fbf" : MUTED,
+                    fontWeight: 700,
+                    fontSize: 13.5,
+                    borderRadius: 999,
+                    padding: "8px 16px",
+                    cursor: "pointer",
+                  }}
+                >
+                  {c.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {blockWhen === "custom" && (
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 10 }}>
+              <span style={{ fontSize: 13, color: MUTED, fontWeight: 600 }}>From</span>
+              <input type="time" value={blockFrom} onChange={(e) => setBlockFrom(e.target.value)}
+                     style={{ ...inputStyle, width: 130 }} required />
+              <span style={{ fontSize: 13, color: MUTED, fontWeight: 600 }}>to</span>
+              <input type="time" value={blockTo} onChange={(e) => setBlockTo(e.target.value)}
+                     style={{ ...inputStyle, width: 130 }} required />
+            </div>
+          )}
+
+          <p style={{ margin: "10px 0 0", fontSize: 12.5, color: MUTED }}>
+            {blockWhen === "all" && "No one can book anything on this date."}
+            {blockWhen === "morning" && "Bookings stop until 1:00 PM. Your afternoon stays open."}
+            {blockWhen === "afternoon" && "Bookings stop from 1:00 PM. Your morning stays open."}
+            {blockWhen === "custom" && `No bookings between ${to12h(blockFrom)} and ${to12h(blockTo)}.`}
+          </p>
+
+          <button type="submit" style={{ ...btnGhost, marginTop: 12 }}>
+            <Plus size={15} /> Block this time
+          </button>
         </form>
 
         {blocked.length > 0 && (
@@ -382,7 +493,13 @@ export default function BookingSetup() {
             {blocked.map((b) => (
               <div key={b.id} style={{ display: "flex", alignItems: "center", gap: 10,
                                         background: "#f4f6fa", borderRadius: 10, padding: "10px 12px" }}>
-                <span style={{ fontSize: 13.5, fontWeight: 700, color: INK }}>{b.block_date}</span>
+                <span style={{ fontSize: 13.5, fontWeight: 700, color: INK }}>{prettyDate(b.block_date)}</span>
+                <span style={{
+                  fontSize: 12, fontWeight: 700, color: "#1b4fbf", background: "#eaf1ff",
+                  borderRadius: 999, padding: "3px 10px", whiteSpace: "nowrap",
+                }}>
+                  {blockLabel(b)}
+                </span>
                 {b.reason && <span style={{ fontSize: 13, color: MUTED, flex: 1 }}>{b.reason}</span>}
                 <button type="button" onClick={() => handleRemoveBlock(b.id)}
                         aria-label="Unblock this date"

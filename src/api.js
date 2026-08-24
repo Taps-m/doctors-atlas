@@ -271,10 +271,17 @@ export const api = {
     return request("/booking", { method: "PATCH", body });
   },
 
-  async addBlockedDate({ date, startTime, reason } = {}) {
+  // startTime/endTime are optional "HH:MM" strings. Leave both out to
+  // block the whole day; pass both to block a range (an afternoon off).
+  async addBlockedDate({ date, startTime, endTime, reason } = {}) {
     return request("/booking/blocked", {
       method: "POST",
-      body: { block_date: date, start_time: startTime || null, reason: reason || null },
+      body: {
+        block_date: date,
+        start_time: startTime || null,
+        end_time: endTime || null,
+        reason: reason || null,
+      },
     });
   },
 
