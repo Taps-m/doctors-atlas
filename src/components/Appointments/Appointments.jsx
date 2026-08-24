@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { CalendarPlus, Clock, Trash2 } from "lucide-react";
+import { CalendarPlus, Clock, Trash2, Check } from "lucide-react";
 import { api } from "../../api";
 import "./Appointments.css";
 
@@ -16,8 +16,48 @@ function formatWhen(iso) {
   });
 }
 
+/** Just the time - the date is already in the section heading. */
+function formatTimeOnly(iso) {
+  return new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
+
 function statusLabel(status) {
   return status.replace("_", " ");
+}
+
+function localDayKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/**
+ * This page is deliberately TODAY ONLY. The API returns every
+ * appointment ever booked; showing all of it meant the top of the page
+ * was months-old history while today's clinic sat below the fold.
+ *
+ * Today splits in two: still to come (the reason to open this page)
+ * and earlier today (which still needs marking off as completed or a
+ * no-show). Other dates are filtered out entirely - a booking made for
+ * a future date is confirmed inline on the form instead.
+ */
+function groupToday(all) {
+  const now = new Date();
+  const todayKey = localDayKey(now);
+
+  const upcoming = [];
+  const earlier = [];
+
+  (all || []).forEach((a) => {
+    if (!a.scheduled_at) return;
+    const when = new Date(a.scheduled_at);
+    if (localDayKey(when) !== todayKey) return;
+    (when >= now ? upcoming : earlier).push(a);
+  });
+
+  const byTime = (a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at);
+  upcoming.sort(byTime);
+  earlier.sort(byTime);
+
+  return { upcoming, earlier };
 }
 
 /**
@@ -37,6 +77,11 @@ export default function Appointments() {
   const [when, setWhen] = useState("");
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
+  // Shown after booking something that isn't today, so a future
+  // booking doesn't look like it silently failed.
+  const [bookedElsewhere, setBookedElsewhere] = useState("");
+
+  const groups = groupToday(appointments);
 
   async function load() {
     setLoading(true);
@@ -76,11 +121,22 @@ export default function Appointments() {
     setSaving(true);
     setFormError("");
     try {
+      const chosen = new Date(when);
       await api.addAppointment({
         patientId: Number(patientId),
-        scheduledAt: new Date(when).toISOString(),
+        scheduledAt: chosen.toISOString(),
       });
       setShowForm(false);
+
+      // This page only lists today, so a booking for any other date
+      // would otherwise appear to have done nothing. Say where it went.
+      if (localDayKey(chosen) !== localDayKey(new Date())) {
+        const name = patients.find((p) => String(p.id) === String(patientId))?.name || "Appointment";
+        setBookedElsewhere(`${name} is booked for ${formatWhen(chosen.toISOString())}.`);
+      } else {
+        setBookedElsewhere("");
+      }
+
       await load();
     } catch (err) {
       setFormError(err.message || "Could not book this appointment");
@@ -113,7 +169,7 @@ export default function Appointments() {
       <div className="appts-page__head">
         <div>
           <h2>Appointments</h2>
-          <p>Everything booked for your clinic.</p>
+          <p>Today's clinic.</p>
         </div>
         <button
           className="appts-page__add-btn"
@@ -162,50 +218,125 @@ export default function Appointments() {
 
       {error && <div className="appts-page__error">{error}</div>}
 
-      <div className="appts-page__list">
-        {loading ? (
+      {bookedElsewhere && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 10,
+            background: "#e6f5f2",
+            border: "1px solid #c9e8e2",
+            borderRadius: 10,
+            padding: "12px 14px",
+            fontSize: 13.5,
+            color: "#2c4a45",
+            marginTop: 12,
+          }}
+        >
+          <Check size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+          <span>
+            {bookedElsewhere} This page shows today only, so it isn't listed below.
+          </span>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="appts-page__list">
           <div className="appts-page__loading">Loading appointments...</div>
-        ) : appointments.length === 0 ? (
-          <div className="appts-page__empty">
-            No appointments yet. Click "Book Appointment" to add one.
-          </div>
-        ) : (
-          appointments.map((a) => (
-            <div className="appts-page__row" key={a.id}>
-              <div className="appts-page__row-main">
-                <div className="appts-page__row-name">{a.patient_name}</div>
-                <div className="appts-page__row-sub">
-                  <Clock size={11} /> {formatWhen(a.scheduled_at)}
-                </div>
-              </div>
+        </div>
+      ) : (
+        <>
+          {/* Today, still to come - the reason to open this page. */}
+          <Section
+            title="Today"
+            count={groups.upcoming.length}
+            subtitle={
+              groups.upcoming.length === 0
+                ? groups.earlier.length > 0
+                  ? "Nothing left today."
+                  : "No appointments booked for today."
+                : null
+            }
+          >
+            {groups.upcoming.map((a) => (
+              <Row key={a.id} a={a} timeOnly onStatus={handleStatusChange} onDelete={handleDelete} />
+            ))}
+          </Section>
 
-              <span className={`appts-page__status appts-page__status--${a.status}`}>
-                {statusLabel(a.status)}
-              </span>
+          {/* Earlier today, dimmed - still needs marking off. */}
+          {groups.earlier.length > 0 && (
+            <Section title="Earlier today" count={groups.earlier.length} muted>
+              {groups.earlier.map((a) => (
+                <Row key={a.id} a={a} timeOnly dim onStatus={handleStatusChange} onDelete={handleDelete} />
+              ))}
+            </Section>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
 
-              <div className="appts-page__row-actions">
-                <select
-                  value={a.status}
-                  onChange={(e) => handleStatusChange(a.id, e.target.value)}
-                >
-                  {STATUS_OPTIONS.map((s) => (
-                    <option key={s} value={s}>
-                      {statusLabel(s)}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  className="appts-page__delete"
-                  type="button"
-                  aria-label="Remove appointment"
-                  onClick={() => handleDelete(a.id)}
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
-          ))
+function Section({ title, count, subtitle, muted, children }) {
+  return (
+    <div style={{ marginTop: 18 }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 8 }}>
+        <span
+          style={{
+            fontSize: 12,
+            fontWeight: 800,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            color: muted ? "#9aa5b5" : "#15213b",
+          }}
+        >
+          {title}
+        </span>
+        {count > 0 && (
+          <span style={{ fontSize: 12, fontWeight: 700, color: "#9aa5b5" }}>{count}</span>
         )}
+      </div>
+      {subtitle ? (
+        <div className="appts-page__list">
+          <div className="appts-page__empty">{subtitle}</div>
+        </div>
+      ) : (
+        <div className="appts-page__list">{children}</div>
+      )}
+    </div>
+  );
+}
+
+function Row({ a, timeOnly, dim, onStatus, onDelete }) {
+  return (
+    <div className="appts-page__row" style={dim ? { opacity: 0.6 } : undefined}>
+      <div className="appts-page__row-main">
+        <div className="appts-page__row-name">{a.patient_name}</div>
+        <div className="appts-page__row-sub">
+          <Clock size={11} /> {timeOnly ? formatTimeOnly(a.scheduled_at) : formatWhen(a.scheduled_at)}
+        </div>
+      </div>
+
+      <span className={`appts-page__status appts-page__status--${a.status}`}>
+        {statusLabel(a.status)}
+      </span>
+
+      <div className="appts-page__row-actions">
+        <select value={a.status} onChange={(e) => onStatus(a.id, e.target.value)}>
+          {STATUS_OPTIONS.map((s) => (
+            <option key={s} value={s}>
+              {statusLabel(s)}
+            </option>
+          ))}
+        </select>
+        <button
+          className="appts-page__delete"
+          type="button"
+          aria-label="Remove appointment"
+          onClick={() => onDelete(a.id)}
+        >
+          <Trash2 size={16} />
+        </button>
       </div>
     </div>
   );

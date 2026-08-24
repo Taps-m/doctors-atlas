@@ -14,7 +14,31 @@ function setToken(token) {
   else localStorage.removeItem("atlas_token");
 }
 
-async function request(path, { method = "GET", body, form = false, auth = true } = {}) {
+/**
+ * Short-lived cache of in-flight and just-finished GETs.
+ *
+ * The dashboard's cards each fetch their own data so they stay
+ * independent of one another - good for keeping them decoupled, but it
+ * meant one page load fired /daily-log four times, /appointments twice
+ * and /stats twice. Identical GETs issued close together now share a
+ * single network request, which roughly halves the calls without any
+ * component needing to know about it.
+ *
+ * Deliberately tiny: GETs only, a few seconds, and any write clears it
+ * so nothing can serve stale data after a change.
+ */
+const GET_CACHE_MS = 8000;
+const getCache = new Map(); // path -> { at, promise }
+
+function cacheKey(path) {
+  return `${getToken() ? "auth" : "anon"}:${path}`;
+}
+
+export function clearApiCache() {
+  getCache.clear();
+}
+
+async function rawRequest(path, { method, body, form, auth }) {
   const headers = {};
   if (auth) {
     const token = getToken();
@@ -41,6 +65,33 @@ async function request(path, { method = "GET", body, form = false, auth = true }
   return res.json();
 }
 
+async function request(path, { method = "GET", body, form = false, auth = true } = {}) {
+  // Anything that changes data invalidates the cache and is never
+  // itself cached.
+  if (method !== "GET") {
+    getCache.clear();
+    return rawRequest(path, { method, body, form, auth });
+  }
+
+  const key = cacheKey(path);
+  const hit = getCache.get(key);
+  if (hit && Date.now() - hit.at < GET_CACHE_MS) {
+    return hit.promise;
+  }
+
+  const promise = rawRequest(path, { method, body, form, auth });
+  getCache.set(key, { at: Date.now(), promise });
+
+  // A failed request must not be remembered, or every card retrying
+  // would get the same rejection back for the next few seconds.
+  promise.catch(() => {
+    const current = getCache.get(key);
+    if (current && current.promise === promise) getCache.delete(key);
+  });
+
+  return promise;
+}
+
 export const api = {
   // ---------- Auth ----------
   async register({ name, email, password, role = "doctor", clinicName, avatarUrl }) {
@@ -63,6 +114,9 @@ export const api = {
 
   logout() {
     setToken(null);
+    // Never let one account's cached responses survive into the next
+    // session in the same tab.
+    clearApiCache();
   },
 
   isLoggedIn() {
