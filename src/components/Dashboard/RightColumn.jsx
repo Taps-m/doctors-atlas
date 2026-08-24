@@ -61,8 +61,14 @@ function ProfileCard({ avatarUrl, name }) {
   );
 }
 
+/**
+ * null means "no comparison possible", never 0. Returning 0 for an
+ * empty previous period rendered as a reassuring green up-arrow on a
+ * clinic that simply has no history - the same mistake the stat cards
+ * used to make.
+ */
 function pctChange(next, prev) {
-  if (!prev) return 0;
+  if (!prev) return null;
   return Math.round(((next - prev) / prev) * 100);
 }
 
@@ -112,11 +118,17 @@ function NewEnquiriesCard() {
           <span className="repeat-card__val">
             {state.loading ? "..." : state.error ? "-" : state.total}
           </span>
-          {!state.loading && !state.error && state.delta !== null && (
-            <span className={`repeat-card__delta ${deltaUp ? "up" : ""}`}>
-              <DeltaIcon size={12} />
-              {Math.abs(state.delta)}%
-            </span>
+          {!state.loading && !state.error && (
+            state.delta !== null ? (
+              <span className={`repeat-card__delta ${deltaUp ? "up" : ""}`}>
+                <DeltaIcon size={12} />
+                {Math.abs(state.delta)}%
+              </span>
+            ) : (
+              <span style={{ fontSize: 11.5, color: "#9aa5b5", fontWeight: 500 }}>
+                No comparison yet
+              </span>
+            )
           )}
         </div>
       </div>
