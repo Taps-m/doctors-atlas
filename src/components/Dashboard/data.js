@@ -27,6 +27,7 @@ export const navItems = [
   { id: "insights", label: "Insights", icon: "BarChart2" },
   { id: "reports", label: "Reports", icon: "FileBarChart" },
   { id: "settings", label: "Settings", icon: "Settings" },
+  { id: "booking-setup", label: "Online Booking", icon: "Calendar" },
   { id: "guide", label: "How to use Atlas", icon: "Lightbulb" },
 ];
 

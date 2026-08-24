@@ -15,6 +15,8 @@ import { api } from "./api";
  * Dashboard and Login stay eagerly imported: one of them is always the
  * first thing rendered, so deferring them would only add a round trip.
  */
+const PublicBooking = lazy(() => import("./components/PublicBooking/PublicBooking"));
+const BookingSetup = lazy(() => import("./components/BookingSetup/BookingSetup"));
 const DailyLog = lazy(() => import("./components/DailyLog/DailyLog"));
 const Patients = lazy(() => import("./components/Patients/Patients"));
 const Appointments = lazy(() => import("./components/Appointments/Appointments"));
@@ -23,7 +25,26 @@ const Reports = lazy(() => import("./components/Reports/Reports"));
 const Settings = lazy(() => import("./components/Settings/Settings"));
 const Guide = lazy(() => import("./components/Guide/Guide"));
 
-const STANDALONE_VIEWS = ["daily-log", "patients", "appointments", "insights", "reports", "settings", "guide"];
+const STANDALONE_VIEWS = ["daily-log", "patients", "appointments", "insights", "reports", "settings", "guide", "booking-setup"];
+
+/**
+ * Works out whether this page load is a PATIENT arriving on a public
+ * booking link rather than the doctor opening her dashboard.
+ *
+ *   /booking            -> the short link she shares
+ *   /book/<slug>        -> the permanent per-clinic form
+ *
+ * Returns the slug to look up, or null for the normal app. This is
+ * checked before any authentication, because a patient has no account
+ * and must never be shown a login screen.
+ */
+function publicBookingSlug() {
+  if (typeof window === "undefined") return null;
+  const path = window.location.pathname.replace(/\/+$/, "").toLowerCase();
+  if (path === "/booking") return "_default";
+  const m = path.match(/^\/book\/([a-z0-9-]+)$/);
+  return m ? m[1] : null;
+}
 
 /** Shown for the moment a lazily-loaded page is being fetched. */
 function PageLoading() {
@@ -35,6 +56,9 @@ function PageLoading() {
 }
 
 export default function App() {
+  // Fixed for this page load; a patient's link never changes underneath
+  // them, and this must be known before anything auth-related runs.
+  const [bookingSlug] = useState(publicBookingSlug);
   const [loggedIn, setLoggedIn] = useState(api.isLoggedIn());
   const [view, setView] = useState("dashboard");
   const [user, setUser] = useState(null);
@@ -66,9 +90,13 @@ export default function App() {
   }
 
   useEffect(() => {
+    // Skip entirely on a public booking link, even if a token happens to
+    // be in this browser (a shared clinic phone, say) - a patient should
+    // trigger no dashboard requests at all.
+    if (bookingSlug) return;
     if (loggedIn) refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loggedIn]);
+  }, [loggedIn, bookingSlug]);
 
   function handleLoggedIn(role) {
     setLoggedIn(true);
@@ -115,6 +143,16 @@ export default function App() {
     console.log("Action dismissed");
   }
 
+  // A patient on a booking link gets the booking page and nothing else -
+  // checked before the login gate, since they have no account.
+  if (bookingSlug) {
+    return (
+      <Suspense fallback={<PageLoading />}>
+        <PublicBooking slug={bookingSlug} />
+      </Suspense>
+    );
+  }
+
   if (!loggedIn) {
     return <Login onLoggedIn={handleLoggedIn} />;
   }
@@ -130,6 +168,7 @@ export default function App() {
           {view === "reports" && <Reports />}
           {view === "settings" && <Settings />}
           {view === "guide" && <Guide />}
+          {view === "booking-setup" && <BookingSetup />}
         </Suspense>
 
         <div style={{ textAlign: "center", marginTop: 16 }}>

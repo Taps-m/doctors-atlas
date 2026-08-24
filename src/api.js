@@ -255,4 +255,57 @@ export const api = {
   async removeStaff(id) {
     return request(`/settings/staff/${id}`, { method: "DELETE" });
   },
+
+  // ---------- Booking settings (doctor / admin) ----------
+  async getBookingSettings() {
+    return request("/booking");
+  },
+
+  async updateBookingSettings({ slug, enabled, slotMinutes, hours, notifyEmail } = {}) {
+    const body = {};
+    if (slug !== undefined) body.booking_slug = slug;
+    if (enabled !== undefined) body.booking_enabled = enabled;
+    if (slotMinutes !== undefined) body.slot_minutes = slotMinutes;
+    if (hours !== undefined) body.booking_hours = hours;
+    if (notifyEmail !== undefined) body.notify_email = notifyEmail;
+    return request("/booking", { method: "PATCH", body });
+  },
+
+  async addBlockedDate({ date, startTime, reason } = {}) {
+    return request("/booking/blocked", {
+      method: "POST",
+      body: { block_date: date, start_time: startTime || null, reason: reason || null },
+    });
+  },
+
+  async removeBlockedDate(id) {
+    return request(`/booking/blocked/${id}`, { method: "DELETE" });
+  },
+
+  // ---------- Public booking (NO auth - patients) ----------
+  // auth:false matters: a patient has no token, and sending a stale one
+  // from a previous login on the same device would be wrong.
+  async publicClinic(slug) {
+    return request(`/public/book/${encodeURIComponent(slug)}`, { auth: false });
+  },
+
+  async publicAvailability(slug, days = 14) {
+    return request(`/public/book/${encodeURIComponent(slug)}/availability?days=${days}`, {
+      auth: false,
+    });
+  },
+
+  async publicBook(slug, { name, phone, email, message, scheduledAt }) {
+    return request(`/public/book/${encodeURIComponent(slug)}/book`, {
+      method: "POST",
+      auth: false,
+      body: {
+        name,
+        phone,
+        email: email || null,
+        message: message || null,
+        scheduled_at: scheduledAt,
+      },
+    });
+  },
 };
