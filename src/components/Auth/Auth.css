@@ -92,3 +92,59 @@
   padding: 8px 10px;
   border-radius: 8px;
 }
+
+/* ---- Brand lockup on the login card ---- */
+/* Matches the sidebar mark exactly: same gradient, same radius, same
+   glow. The login screen and the app should not look like two
+   different products. */
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.auth-brand__mark {
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #1a9e8f 0%, #14746a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(26, 158, 143, 0.45);
+  flex-shrink: 0;
+}
+
+.auth-brand__text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1;
+}
+
+.auth-brand__eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  opacity: 0.6;
+}
+
+.auth-brand__name {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+.auth-brand__name sup {
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 3px;
+  opacity: 0.7;
+  vertical-align: top;
+  position: relative;
+  top: 2px;
+}
