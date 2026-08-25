@@ -7,18 +7,28 @@ const STATUS_OPTIONS = ["scheduled", "completed", "no_show", "cancelled"];
 
 function formatWhen(iso) {
   const d = new Date(iso);
-  return d.toLocaleString(undefined, {
+  // "en-GB" for day-then-month, hour12 so a doctor scanning the list
+  // never has to work out whether 5:00 is a dawn slot or an evening
+  // one. The booking page and the notification email both say
+  // "11:00 AM"; this is the third place the same appointment is shown
+  // and it has to match them.
+  return d.toLocaleString("en-GB", {
     day: "numeric",
     month: "short",
     year: "numeric",
     hour: "numeric",
     minute: "2-digit",
+    hour12: true,
   });
 }
 
 /** Just the time - the date is already in the section heading. */
 function formatTimeOnly(iso) {
-  return new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  return new Date(iso).toLocaleTimeString("en-GB", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
 }
 
 function statusLabel(status) {

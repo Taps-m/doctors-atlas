@@ -160,6 +160,41 @@ export default function App() {
   if (STANDALONE_VIEWS.includes(view)) {
     return (
       <div style={{ padding: 24, background: "#f4f6fa", minHeight: "100vh" }}>
+        {/*
+          Sticky, and at the TOP. It used to sit only below the page
+          content, which meant scrolling past a full day's
+          appointments to get out - and on a long list the way back
+          was effectively hidden. Sticky costs nothing and means the
+          exit is always one tap away.
+        */}
+        <div
+          style={{
+            position: "sticky",
+            top: 0,
+            zIndex: 20,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            margin: "-24px -24px 16px",
+            padding: "12px 24px",
+            background: "rgba(244,246,250,0.92)",
+            backdropFilter: "blur(6px)",
+            borderBottom: "1px solid #e4e8f0",
+          }}
+        >
+          {!(view === "daily-log" && user?.role === "staff") && (
+            <button onClick={() => setView("dashboard")} style={topLinkStyle}>
+              ← Back to Dashboard
+            </button>
+          )}
+          <button
+            onClick={handleLogout}
+            style={{ ...topLinkStyle, marginLeft: "auto", color: "#8794a8" }}
+          >
+            Log out
+          </button>
+        </div>
+
         <Suspense fallback={<PageLoading />}>
           {view === "daily-log" && <DailyLog doctorName={user?.name || "Doctor"} onSaved={refresh} />}
           {view === "patients" && <Patients />}
@@ -170,17 +205,6 @@ export default function App() {
           {view === "guide" && <Guide />}
           {view === "booking-setup" && <BookingSetup />}
         </Suspense>
-
-        <div style={{ textAlign: "center", marginTop: 16 }}>
-          {!(view === "daily-log" && user?.role === "staff") && (
-            <button onClick={() => setView("dashboard")} style={backLinkStyle}>
-              ← Back to Dashboard
-            </button>
-          )}
-          <button onClick={handleLogout} style={backLinkStyle}>
-            Log out
-          </button>
-        </div>
       </div>
     );
   }
@@ -209,12 +233,15 @@ export default function App() {
   );
 }
 
-const backLinkStyle = {
+// The sticky header links: a real control rather than the small
+// underlined text this used to be, so it reads as tappable on a phone.
+const topLinkStyle = {
   background: "transparent",
   border: "none",
-  color: "#6b7a90",
-  fontSize: 12.5,
-  textDecoration: "underline",
+  color: "#2f6fed",
+  fontSize: 13.5,
+  fontWeight: 700,
   cursor: "pointer",
-  margin: "0 8px",
+  padding: "6px 4px",
 };
+
