@@ -36,28 +36,65 @@ function localDayKey(d) {
  *
  * Today splits in two: still to come (the reason to open this page)
  * and earlier today (which still needs marking off as completed or a
- * no-show). Other dates are filtered out entirely - a booking made for
- * a future date is confirmed inline on the form instead.
+ * no-show).
+ *
+ * Later dates are collected separately and kept COLLAPSED behind a
+ * one-line summary. Patients booking themselves online changed the
+ * picture: appointments now arrive for dates the doctor never typed
+ * in, and the notification email tells her it is "on your
+ * Appointments page" - so it has to actually be reachable here. The
+ * collapse keeps today the default view, which is the whole point of
+ * the page.
  */
 function groupToday(all) {
   const now = new Date();
   const todayKey = localDayKey(now);
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
   const upcoming = [];
   const earlier = [];
+  const later = [];
 
   (all || []).forEach((a) => {
     if (!a.scheduled_at) return;
     const when = new Date(a.scheduled_at);
-    if (localDayKey(when) !== todayKey) return;
-    (when >= now ? upcoming : earlier).push(a);
+    if (localDayKey(when) === todayKey) {
+      (when >= now ? upcoming : earlier).push(a);
+    } else if (when > startOfToday) {
+      later.push(a);
+    }
+    // Anything before today is history and stays off this page.
   });
 
   const byTime = (a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at);
   upcoming.sort(byTime);
   earlier.sort(byTime);
+  later.sort(byTime);
 
-  return { upcoming, earlier };
+  return { upcoming, earlier, later };
+}
+
+/** "Tue 1 Sep" - the heading for one future day. */
+function dayHeading(iso) {
+  return new Date(iso).toLocaleDateString(undefined, {
+    weekday: "short", day: "numeric", month: "short",
+  });
+}
+
+/** Later appointments as [{ key, label, items }], in date order. */
+function byDay(items) {
+  const days = [];
+  const seen = new Map();
+  items.forEach((a) => {
+    const key = localDayKey(new Date(a.scheduled_at));
+    if (!seen.has(key)) {
+      const group = { key, label: dayHeading(a.scheduled_at), items: [] };
+      seen.set(key, group);
+      days.push(group);
+    }
+    seen.get(key).items.push(a);
+  });
+  return days;
 }
 
 /**
@@ -73,6 +110,8 @@ export default function Appointments() {
   const [error, setError] = useState("");
 
   const [showForm, setShowForm] = useState(false);
+  // Later bookings stay hidden until asked for, so today keeps the page.
+  const [showLater, setShowLater] = useState(false);
   const [patientId, setPatientId] = useState("");
   const [when, setWhen] = useState("");
   const [saving, setSaving] = useState(false);
@@ -235,7 +274,7 @@ export default function Appointments() {
         >
           <Check size={16} style={{ flexShrink: 0, marginTop: 1 }} />
           <span>
-            {bookedElsewhere} This page shows today only, so it isn't listed below.
+            {bookedElsewhere} It's under "booked later" below.
           </span>
         </div>
       )}
@@ -270,6 +309,55 @@ export default function Appointments() {
                 <Row key={a.id} a={a} timeOnly dim onStatus={handleStatusChange} onDelete={handleDelete} />
               ))}
             </Section>
+          )}
+
+          {/* Everything after today, collapsed by default. */}
+          {groups.later.length > 0 && (
+            <div style={{ marginTop: 18 }}>
+              <button
+                type="button"
+                onClick={() => setShowLater((v) => !v)}
+                aria-expanded={showLater}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  width: "100%",
+                  background: "#f4f6fa",
+                  border: "1px solid #e4e8f0",
+                  borderRadius: 10,
+                  padding: "12px 14px",
+                  cursor: "pointer",
+                  fontSize: 13.5,
+                  fontWeight: 700,
+                  color: "#15213b",
+                  textAlign: "left",
+                }}
+              >
+                <CalendarPlus size={16} style={{ color: "#2f6fed", flexShrink: 0 }} />
+                <span>
+                  {groups.later.length} booked later
+                </span>
+                <span style={{ marginLeft: "auto", fontWeight: 700, color: "#2f6fed" }}>
+                  {showLater ? "Hide" : "View"}
+                </span>
+              </button>
+
+              {showLater &&
+                byDay(groups.later).map((day) => (
+                  <Section key={day.key} title={day.label} count={day.items.length}>
+                    {day.items.map((a) => (
+                      <Row
+                        key={a.id}
+                        a={a}
+                        timeOnly
+                        onStatus={handleStatusChange}
+                        onDelete={handleDelete}
+                      />
+                    ))}
+                  </Section>
+                ))}
+            </div>
           )}
         </>
       )}
