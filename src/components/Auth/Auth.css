@@ -1,150 +1,294 @@
-.auth-page {
+/* Auth.css
+   Sign-in screen. Two columns on desktop - a brand panel that explains
+   what Atlas is, and the form - collapsing to a single column on
+   phones, where the panel is replaced by a compact lockup above the
+   form so the fields stay above the fold. */
+
+:root {
+  --auth-teal: #1a9e8f;
+  --auth-teal-deep: #0f5d55;
+  --auth-navy: #15213b;
+  --auth-ink: #15213b;
+  --auth-muted: #6b7a90;
+  --auth-rule: #dfe4ee;
+  --auth-field: #ffffff;
+  --auth-page: #f4f6fa;
+}
+
+.auth {
   min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f4f6fa;
-  padding: 24px;
-}
-
-.auth-card {
-  width: 100%;
-  max-width: 380px;
-  background: #fff;
-  border: 1px solid #e7ebf1;
-  border-radius: 16px;
-  padding: 32px 28px;
-  display: flex;
-  flex-direction: column;
-}
-
-.auth-card h1 {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 800;
-  color: #10233d;
-  text-align: center;
-}
-
-.auth-tagline {
-  text-align: center;
-  color: #1a9e8f;
-  font-size: 13px;
-  font-weight: 600;
-  margin: 6px 0 0;
-}
-
-.auth-sub {
-  text-align: center;
-  color: #6b7a90;
-  font-size: 13px;
-  margin: 6px 0 22px;
-}
-
-.auth-card label {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #10233d;
-  margin: 10px 0 4px;
-}
-
-.auth-card input,
-.auth-card select {
-  padding: 10px 12px;
-  border: 1px solid #e7ebf1;
-  border-radius: 8px;
-  font-size: 14px;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  background: var(--auth-page);
+  color: var(--auth-ink);
   font-family: inherit;
 }
 
-.auth-card button[type="submit"] {
-  margin-top: 20px;
-  background: #1a9e8f;
-  color: #fff;
-  border: none;
-  padding: 12px;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 14px;
-  cursor: pointer;
-}
+/* ---------------- brand side ---------------- */
 
-.auth-card button[type="submit"]:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-.auth-switch {
-  margin-top: 12px;
-  background: transparent;
-  border: none;
-  color: #6b7a90;
-  font-size: 12.5px;
-  cursor: pointer;
-  text-decoration: underline;
-}
-
-.auth-error {
-  margin-top: 12px;
-  background: #fdecec;
-  color: #b3272c;
-  font-size: 12.5px;
-  padding: 8px 10px;
-  border-radius: 8px;
-}
-
-/* ---- Brand lockup on the login card ---- */
-/* Matches the sidebar mark exactly: same gradient, same radius, same
-   glow. The login screen and the app should not look like two
-   different products. */
-
-.auth-brand {
+.auth__brandside {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
-  gap: 12px;
+  padding: 56px 6vw;
+  background:
+    radial-gradient(120% 90% at 12% 8%, rgba(255, 255, 255, 0.14) 0%, transparent 55%),
+    linear-gradient(155deg, #14746a 0%, #0f5d55 48%, #0b3f45 100%);
+  color: #fff;
+}
+
+/* A large, very faint compass ring, bled off the corner. Gives the
+   panel some depth without another image to load. */
+.auth__brandside::after {
+  content: "";
+  position: absolute;
+  right: -18%;
+  bottom: -28%;
+  width: 62%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.13);
+  box-shadow: inset 0 0 0 40px rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+}
+
+.auth__brandinner {
+  position: relative;
+  z-index: 1;
+  max-width: 30rem;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.auth__lockup { display: flex; align-items: center; gap: 12px; }
+
+.auth__mark {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #1fb3a1 0%, #12857a 100%);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+}
+
+.auth__wordmark { display: flex; flex-direction: column; line-height: 1; }
+
+.auth__eyebrow {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  opacity: 0.72;
+}
+
+.auth__name {
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -0.005em;
+  margin-top: 3px;
+}
+
+.auth__name sup {
+  font-size: 9.5px;
+  font-weight: 700;
+  margin-left: 3px;
+  opacity: 0.65;
+  vertical-align: top;
+  position: relative;
+  top: 1px;
+}
+
+.auth__headline {
+  font-size: clamp(1.7rem, 2.6vw, 2.35rem);
+  line-height: 1.18;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+  max-width: 15ch;
+  text-wrap: balance;
+}
+
+.auth__points {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.auth__points li { display: flex; gap: 14px; align-items: flex-start; }
+
+.auth__points svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+  opacity: 0.85;
+}
+
+.auth__points div { display: flex; flex-direction: column; gap: 2px; }
+.auth__points strong { font-size: 15px; font-weight: 700; }
+.auth__points span { font-size: 14px; line-height: 1.5; opacity: 0.78; }
+
+.auth__footnote {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.62;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  padding-top: 18px;
+}
+
+/* ---------------- form side ---------------- */
+
+.auth__formside {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
+  gap: 22px;
+  padding: 48px 24px;
+}
+
+.auth__form {
+  width: 100%;
+  max-width: 25rem;
+  background: #fff;
+  border: 1px solid var(--auth-rule);
+  border-radius: 16px;
+  padding: 34px 32px 30px;
+  box-shadow: 0 1px 2px rgba(21, 33, 59, 0.04), 0 12px 32px rgba(21, 33, 59, 0.07);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Shown only on narrow screens - the brand panel is hidden there. */
+.auth__lockup--compact { display: none; }
+
+.auth__title {
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--auth-navy);
+}
+
+.auth__subtitle {
+  margin: 6px 0 22px;
+  font-size: 14.5px;
+  color: var(--auth-muted);
+  line-height: 1.5;
+}
+
+.auth__form label {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--auth-navy);
+  margin-bottom: 6px;
+}
+
+.auth__form input,
+.auth__form select {
+  font: inherit;
+  font-size: 15px;           /* 15px+ stops iOS zooming the page on focus */
+  color: var(--auth-ink);
+  background: var(--auth-field);
+  border: 1.5px solid var(--auth-rule);
+  border-radius: 10px;
+  padding: 11px 13px;
+  margin-bottom: 16px;
+  width: 100%;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.auth__form input:focus,
+.auth__form select:focus {
+  outline: none;
+  border-color: var(--auth-teal);
+  box-shadow: 0 0 0 3px rgba(26, 158, 143, 0.16);
+}
+
+.auth__error {
+  background: #fdecec;
+  color: #b3272c;
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-size: 13.5px;
+  line-height: 1.45;
   margin-bottom: 14px;
 }
 
-.auth-brand__mark {
-  width: 50px;
-  height: 50px;
-  border-radius: 14px;
+.auth__submit {
+  font: inherit;
+  font-size: 15.5px;
+  font-weight: 700;
+  color: #fff;
   background: linear-gradient(135deg, #1a9e8f 0%, #14746a 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 6px 18px rgba(26, 158, 143, 0.45);
-  flex-shrink: 0;
+  border: none;
+  border-radius: 10px;
+  padding: 13px 16px;
+  cursor: pointer;
+  margin-top: 4px;
+  box-shadow: 0 6px 16px rgba(26, 158, 143, 0.28);
+  transition: transform .12s ease, box-shadow .15s ease, opacity .15s ease;
 }
 
-.auth-brand__text {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  line-height: 1;
+.auth__submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 9px 22px rgba(26, 158, 143, 0.34);
 }
 
-.auth-brand__eyebrow {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  opacity: 0.6;
+.auth__submit:disabled { opacity: .65; cursor: default; }
+
+.auth__switch {
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--auth-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-top: 16px;
+  padding: 4px;
 }
 
-.auth-brand__name {
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  line-height: 1.1;
+.auth__switch:hover { color: var(--auth-teal); }
+
+.auth__legal {
+  margin: 0;
+  font-size: 12px;
+  color: #9aa5b5;
+  letter-spacing: 0.02em;
 }
 
-.auth-brand__name sup {
-  font-size: 10px;
-  font-weight: 700;
-  margin-left: 3px;
-  opacity: 0.7;
-  vertical-align: top;
-  position: relative;
-  top: 2px;
+.auth__submit:focus-visible,
+.auth__switch:focus-visible {
+  outline: 2px solid var(--auth-teal);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth__submit { transition: none; }
+  .auth__submit:hover:not(:disabled) { transform: none; }
+}
+
+/* ---------------- narrow screens ---------------- */
+
+@media (max-width: 880px) {
+  .auth { grid-template-columns: 1fr; }
+  .auth__brandside { display: none; }
+  .auth__lockup--compact {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 22px;
+  }
+  /* On white, the wordmark needs the dark ink rather than white. */
+  .auth__lockup--compact .auth__eyebrow,
+  .auth__lockup--compact .auth__name { color: var(--auth-navy); }
+  .auth__form { padding: 28px 22px 26px; }
+  .auth__formside { padding: 32px 18px; justify-content: flex-start; }
 }
