@@ -138,6 +138,9 @@ export default function PublicBooking({ slug }) {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  // "in_person" | "online". Only ever shown when the clinic offers it.
+  const [mode, setMode] = useState("in_person");
+  const [consent, setConsent] = useState(false);
 
   const [booking, setBooking] = useState(false);
   const [bookError, setBookError] = useState("");
@@ -175,6 +178,16 @@ export default function PublicBooking({ slug }) {
     if (!name.trim()) return setBookError("Please enter the patient's name.");
     const digits = phone.replace(/\D/g, "");
     if (digits.length < 7) return setBookError("Please enter a valid phone number.");
+    if (mode === "online") {
+      // Checked here as well as on the server so the patient is told
+      // before the request, not after it bounces.
+      if (!email.trim()) {
+        return setBookError("Please add your email — that's where your video link is sent.");
+      }
+      if (!consent) {
+        return setBookError("Please confirm you agree to a video consultation.");
+      }
+    }
 
     setBooking(true);
     setBookError("");
@@ -187,8 +200,17 @@ export default function PublicBooking({ slug }) {
         // Sent without a timezone so the clinic's own local time is
         // taken literally, matching how it books internally.
         scheduledAt: `${activeDay}T${slot}:00`,
+        mode,
+        consent,
       });
-      setConfirmed({ when: prettyFull(activeDay, slot), clinic: res.clinic_name, phone: clinic?.phone || "" });
+      setConfirmed({
+        when: prettyFull(activeDay, slot),
+        clinic: res.clinic_name,
+        phone: clinic?.phone || "",
+        mode: res.mode || mode,
+        consultToken: res.consult_token || null,
+        email: email.trim(),
+      });
     } catch (err) {
       setBookError(err.message || "Could not book that time. Please try another.");
       // Someone may have taken the slot - refresh what's actually free.
@@ -258,14 +280,37 @@ export default function PublicBooking({ slug }) {
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </div>
-          <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>Appointment confirmed</h1>
+          <h1 style={{ fontSize: 20, margin: "0 0 8px" }}>
+            {confirmed.mode === "online" ? "Video consultation confirmed" : "Appointment confirmed"}
+          </h1>
           <p style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 700, color: NAVY }}>
             {confirmed.when}
           </p>
           <p style={{ margin: "0 0 18px", fontSize: 14, color: MUTED }}>{confirmed.clinic}</p>
+          {confirmed.mode === "online" && confirmed.consultToken ? (
+            <>
+              <a
+                href={`/consult/${confirmed.consultToken}`}
+                style={{
+                  display: "block", background: "#1a9e8f", color: "#fff",
+                  textDecoration: "none", fontWeight: 800, fontSize: 15,
+                  padding: "13px 16px", borderRadius: 10, marginBottom: 14,
+                }}
+              >
+                Open your consultation page
+              </a>
+              <p style={{ margin: "0 0 14px", fontSize: 13.5, color: MUTED, lineHeight: 1.6 }}>
+                Save this page or use the link we've emailed to{" "}
+                <strong>{confirmed.email}</strong>. The Join button appears
+                15 minutes before your appointment.
+              </p>
+            </>
+          ) : null}
           <p style={{ margin: 0, fontSize: 13.5, color: MUTED, lineHeight: 1.6 }}>
-            Please arrive a few minutes early. To change or cancel,
-            {confirmed.phone ? " call " : " contact the clinic directly."}
+            {confirmed.mode === "online"
+              ? "To change or cancel, "
+              : "Please arrive a few minutes early. To change or cancel, "}
+            {confirmed.phone ? "call " : "contact the clinic directly."}
             {confirmed.phone && <CallLink phone={confirmed.phone} />}
           </p>
         </Card>
@@ -385,6 +430,43 @@ export default function PublicBooking({ slug }) {
           {/* Details */}
           <Card>
             <form onSubmit={handleBook}>
+              {clinic?.online_consult_enabled && (
+                <div style={{ marginBottom: 18 }}>
+                  <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: ".08em", color: MUTED, textTransform: "uppercase", marginBottom: 10 }}>
+                    How would you like to be seen?
+                  </div>
+                  <div style={{ display: "flex", gap: 10 }}>
+                    {[
+                      { id: "in_person", label: "At the clinic" },
+                      { id: "online", label: "Video call" },
+                    ].map((opt) => {
+                      const on = mode === opt.id;
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => setMode(opt.id)}
+                          aria-pressed={on}
+                          style={{
+                            flex: 1,
+                            border: on ? "1.5px solid #1a9e8f" : "1.5px solid #dfe4ee",
+                            background: on ? "#e6f5f2" : "#fff",
+                            color: on ? "#0f5d55" : MUTED,
+                            fontWeight: 700,
+                            fontSize: 14.5,
+                            borderRadius: 10,
+                            padding: "12px 10px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: ".08em", color: MUTED, textTransform: "uppercase", marginBottom: 14 }}>
                 Your details
               </div>
@@ -400,10 +482,19 @@ export default function PublicBooking({ slug }) {
                        inputMode="tel" autoComplete="tel" />
               </Field>
 
-              <Field label="Email" hint="optional">
+              <Field
+                label="Email"
+                hint={mode === "online" ? undefined : "optional"}
+                required={mode === "online"}
+              >
                 <input style={inputStyle} value={email} onChange={(e) => setEmail(e.target.value)}
                        placeholder="you@example.com" maxLength={120}
                        inputMode="email" autoComplete="email" />
+                {mode === "online" && (
+                  <div style={{ fontSize: 12, color: MUTED, marginTop: 5, lineHeight: 1.45 }}>
+                    We send your video consultation link here.
+                  </div>
+                )}
               </Field>
 
               <Field label="Anything the doctor should know" hint="optional">
@@ -418,6 +509,27 @@ export default function PublicBooking({ slug }) {
                   {message.length}/300
                 </div>
               </Field>
+
+              {mode === "online" && (
+                <label
+                  style={{
+                    display: "flex", gap: 10, alignItems: "flex-start",
+                    background: "#f4f6fa", borderRadius: 10, padding: "12px 14px",
+                    marginBottom: 14, cursor: "pointer",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={consent}
+                    onChange={(e) => setConsent(e.target.checked)}
+                    style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0 }}
+                  />
+                  <span style={{ fontSize: 13.5, color: "#2c3d57", lineHeight: 1.5 }}>
+                    I agree to be seen by video, and understand the doctor may ask
+                    me to come to the clinic if an examination is needed.
+                  </span>
+                </label>
+              )}
 
               {slot && (
                 <div style={{ background: "#e6f5f2", border: "1px solid #c9e8e2", borderRadius: 10,

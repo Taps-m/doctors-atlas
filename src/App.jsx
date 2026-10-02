@@ -16,6 +16,7 @@ import { api } from "./api";
  * first thing rendered, so deferring them would only add a round trip.
  */
 const PublicBooking = lazy(() => import("./components/PublicBooking/PublicBooking"));
+const ConsultPage = lazy(() => import("./components/Consult/ConsultPage"));
 const BookingSetup = lazy(() => import("./components/BookingSetup/BookingSetup"));
 const DailyLog = lazy(() => import("./components/DailyLog/DailyLog"));
 const Patients = lazy(() => import("./components/Patients/Patients"));
@@ -46,6 +47,18 @@ function publicBookingSlug() {
   return m ? m[1] : null;
 }
 
+/**
+ * /consult/<token> - the patient's video appointment page. Case is
+ * preserved here, unlike the slug above: the token is base64url and
+ * lowercasing it would break every link.
+ */
+function publicConsultToken() {
+  if (typeof window === "undefined") return null;
+  const path = window.location.pathname.replace(/\/+$/, "");
+  const m = path.match(/^\/consult\/([A-Za-z0-9_-]{8,128})$/);
+  return m ? m[1] : null;
+}
+
 /** Shown for the moment a lazily-loaded page is being fetched. */
 function PageLoading() {
   return (
@@ -59,6 +72,7 @@ export default function App() {
   // Fixed for this page load; a patient's link never changes underneath
   // them, and this must be known before anything auth-related runs.
   const [bookingSlug] = useState(publicBookingSlug);
+  const [consultToken] = useState(publicConsultToken);
   const [loggedIn, setLoggedIn] = useState(api.isLoggedIn());
   const [view, setView] = useState("dashboard");
   const [user, setUser] = useState(null);
@@ -93,10 +107,10 @@ export default function App() {
     // Skip entirely on a public booking link, even if a token happens to
     // be in this browser (a shared clinic phone, say) - a patient should
     // trigger no dashboard requests at all.
-    if (bookingSlug) return;
+    if (bookingSlug || consultToken) return;
     if (loggedIn) refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loggedIn, bookingSlug]);
+  }, [loggedIn, bookingSlug, consultToken]);
 
   function handleLoggedIn(role) {
     setLoggedIn(true);
@@ -141,6 +155,16 @@ export default function App() {
 
   function handleDismissAction() {
     console.log("Action dismissed");
+  }
+
+  // Same reasoning as the booking page: a patient holding a consult
+  // link has no account and must never meet a login screen.
+  if (consultToken) {
+    return (
+      <Suspense fallback={<PageLoading />}>
+        <ConsultPage token={consultToken} />
+      </Suspense>
+    );
   }
 
   // A patient on a booking link gets the booking page and nothing else -

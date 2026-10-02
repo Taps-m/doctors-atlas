@@ -261,13 +261,22 @@ export const api = {
     return request("/booking");
   },
 
-  async updateBookingSettings({ slug, enabled, slotMinutes, hours, notifyEmail } = {}) {
+  async updateBookingSettings({
+    slug, enabled, slotMinutes, hours, notifyEmail, phone,
+    onlineConsultEnabled, consultRoomUrl, doctorRegNo,
+  } = {}) {
     const body = {};
     if (slug !== undefined) body.booking_slug = slug;
     if (enabled !== undefined) body.booking_enabled = enabled;
     if (slotMinutes !== undefined) body.slot_minutes = slotMinutes;
     if (hours !== undefined) body.booking_hours = hours;
     if (notifyEmail !== undefined) body.notify_email = notifyEmail;
+    // `phone` was missing here while the form happily sent it, so the
+    // clinic's number silently never saved.
+    if (phone !== undefined) body.phone = phone;
+    if (onlineConsultEnabled !== undefined) body.online_consult_enabled = onlineConsultEnabled;
+    if (consultRoomUrl !== undefined) body.consult_room_url = consultRoomUrl;
+    if (doctorRegNo !== undefined) body.doctor_reg_no = doctorRegNo;
     return request("/booking", { method: "PATCH", body });
   },
 
@@ -302,7 +311,7 @@ export const api = {
     });
   },
 
-  async publicBook(slug, { name, phone, email, message, scheduledAt }) {
+  async publicBook(slug, { name, phone, email, message, scheduledAt, mode, consent }) {
     return request(`/public/book/${encodeURIComponent(slug)}/book`, {
       method: "POST",
       auth: false,
@@ -312,7 +321,15 @@ export const api = {
         email: email || null,
         message: message || null,
         scheduled_at: scheduledAt,
+        mode: mode || "in_person",
+        consent: !!consent,
       },
     });
+  },
+
+  // The patient's own consultation page. No auth: the token in the
+  // URL is the only credential, and it is scoped to one appointment.
+  async publicConsult(token) {
+    return request(`/public/consult/${encodeURIComponent(token)}`, { auth: false });
   },
 };

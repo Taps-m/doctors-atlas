@@ -103,6 +103,10 @@ export default function BookingSetup() {
   const [hours, setHours] = useState({});
   const [blocked, setBlocked] = useState([]);
   const [phone, setPhone] = useState("");
+  // Telemedicine
+  const [onlineEnabled, setOnlineEnabled] = useState(false);
+  const [roomUrl, setRoomUrl] = useState("");
+  const [regNo, setRegNo] = useState("");
   const [copied, setCopied] = useState(false);
 
   const [blockDate, setBlockDate] = useState("");
@@ -127,6 +131,9 @@ export default function BookingSetup() {
       setHours(s.booking_hours || {});
       setBlocked(s.blocked || []);
       setPhone(s.phone || "");
+      setOnlineEnabled(!!s.online_consult_enabled);
+      setRoomUrl(s.consult_room_url || "");
+      setRegNo(s.doctor_reg_no || "");
     } catch (err) {
       setError(err.message || "Could not load your booking settings");
     } finally {
@@ -177,6 +184,8 @@ export default function BookingSetup() {
         slotMinutes,
         hours,
         phone,
+        consultRoomUrl: roomUrl.trim(),
+        doctorRegNo: regNo.trim(),
         ...extra,
       });
       setSlug(s.booking_slug || "");
@@ -185,6 +194,9 @@ export default function BookingSetup() {
       setHours(s.booking_hours || {});
       setBlocked(s.blocked || []);
       setPhone(s.phone || "");
+      setOnlineEnabled(!!s.online_consult_enabled);
+      setRoomUrl(s.consult_room_url || "");
+      setRegNo(s.doctor_reg_no || "");
       setSavedMsg("Saved.");
       setTimeout(() => setSavedMsg(""), 2500);
       return true;
@@ -426,6 +438,63 @@ export default function BookingSetup() {
           inputMode="tel"
           placeholder="+91 98765 43210"
         />
+      </Card>
+
+      {/* ---- Telemedicine ---- */}
+      <Card
+        title="Telemedicine"
+        subtitle="Let patients choose a video appointment instead of coming in. They get their own consultation page; your meeting link is never shared directly."
+      >
+        <label style={labelStyle}>Your meeting link</label>
+        <input
+          value={roomUrl}
+          onChange={(e) => setRoomUrl(e.target.value)}
+          style={{ ...inputStyle, width: "100%", maxWidth: 460 }}
+          maxLength={500}
+          placeholder="https://meet.google.com/abc-defg-hij"
+        />
+        <p style={{ margin: "8px 0 20px", fontSize: 13, color: MUTED, lineHeight: 1.55 }}>
+          Open <strong>meet.google.com/new</strong> once, copy the link, and paste
+          it here. It stays the same for every consultation — patients only ever
+          see it in the fifteen minutes around their own appointment.
+        </p>
+
+        <label style={labelStyle}>Registration number</label>
+        <input
+          value={regNo}
+          onChange={(e) => setRegNo(e.target.value)}
+          style={{ ...inputStyle, width: 260 }}
+          maxLength={60}
+          placeholder="e.g. WB-12345"
+        />
+        <p style={{ margin: "8px 0 20px", fontSize: 13, color: MUTED, lineHeight: 1.55 }}>
+          Shown to the patient on the consultation page. It's expected of a
+          remote consultation, and it reassures people they're seeing a real
+          doctor.
+        </p>
+
+        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+          <button
+            type="button"
+            onClick={() => save({ onlineConsultEnabled: !onlineEnabled })}
+            disabled={saving || (!onlineEnabled && !roomUrl.trim())}
+            style={{
+              ...btnPrimary,
+              background: onlineEnabled ? "#fff" : btnPrimary.background,
+              color: onlineEnabled ? "#b3272c" : "#fff",
+              border: onlineEnabled ? "1px solid #f6cdcd" : "none",
+              opacity: !onlineEnabled && !roomUrl.trim() ? 0.5 : 1,
+              cursor: !onlineEnabled && !roomUrl.trim() ? "not-allowed" : "pointer",
+            }}
+          >
+            {onlineEnabled ? "Turn telemedicine off" : "Turn telemedicine on"}
+          </button>
+          <span style={{ fontSize: 13.5, fontWeight: 700, color: onlineEnabled ? "#1a9e8f" : MUTED }}>
+            {onlineEnabled
+              ? "● Patients can choose a video appointment"
+              : "Off — patients can only book in person"}
+          </span>
+        </div>
       </Card>
 
       {/* ---- Days off ---- */}
