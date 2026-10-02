@@ -463,7 +463,7 @@ export default function BookingSetup() {
         <input
           value={regNo}
           onChange={(e) => setRegNo(e.target.value)}
-          style={{ ...inputStyle, width: 260 }}
+          style={{ ...inputStyle, width: "100%", maxWidth: 260 }}
           maxLength={60}
           placeholder="e.g. WB-12345"
         />
@@ -485,6 +485,8 @@ export default function BookingSetup() {
               border: onlineEnabled ? "1px solid #f6cdcd" : "none",
               opacity: !onlineEnabled && !roomUrl.trim() ? 0.5 : 1,
               cursor: !onlineEnabled && !roomUrl.trim() ? "not-allowed" : "pointer",
+              maxWidth: "100%",
+              whiteSpace: "normal",
             }}
           >
             {onlineEnabled ? "Turn telemedicine off" : "Turn telemedicine on"}
