@@ -27,7 +27,7 @@ const Reports = lazy(() => import("./components/Reports/Reports"));
 const Settings = lazy(() => import("./components/Settings/Settings"));
 const Guide = lazy(() => import("./components/Guide/Guide"));
 
-const STANDALONE_VIEWS = ["daily-log", "patients", "appointments", "insights", "reports", "settings", "guide", "booking-setup"];
+const STANDALONE_VIEWS = ["daily-log", "patients", "appointments", "insights", "reports", "settings", "guide", "booking-setup", "telemedicine"];
 
 /**
  * Works out whether this page load is a PATIENT arriving on a public
