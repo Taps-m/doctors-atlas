@@ -158,7 +158,6 @@ async function loadNotifications() {
  */
 export default function TopBar({
   userName = "Dr. Ananya",
-  userAvatar,
   onMenuClick,
   dateRange,
   onDateRangeChange,

@@ -36,7 +36,6 @@ export default function Dashboard({
         <div className="main-col">
           <TopBar
             userName={userName || "Doctor"}
-            userAvatar={userAvatar}
             onMenuClick={() => setSidebarOpen(true)}
             dateRange={dateRange}
             onDateRangeChange={onDateRangeChange}

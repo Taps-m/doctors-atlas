@@ -28,6 +28,7 @@ export const navItems = [
   { id: "reports", label: "Reports", icon: "FileBarChart" },
   { id: "settings", label: "Settings", icon: "Settings" },
   { id: "booking-setup", label: "Online Booking", icon: "Calendar" },
+  { id: "telemedicine", label: "Telemedicine", icon: "Video" },
   { id: "guide", label: "How to use Atlas", icon: "Lightbulb" },
 ];
 

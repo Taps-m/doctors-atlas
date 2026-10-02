@@ -19,6 +19,7 @@ import {
   Lightbulb,
   Target,
   ClipboardList,
+  Video,
 } from "lucide-react";
 
 const Rupee = (props) => (
@@ -44,6 +45,7 @@ export const ICONS = {
   Target,
   Rupee,
   ClipboardList,
+  Video,
 };
 
 export function getIcon(name) {

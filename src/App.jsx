@@ -18,6 +18,7 @@ import { api } from "./api";
 const PublicBooking = lazy(() => import("./components/PublicBooking/PublicBooking"));
 const ConsultPage = lazy(() => import("./components/Consult/ConsultPage"));
 const BookingSetup = lazy(() => import("./components/BookingSetup/BookingSetup"));
+const Telemedicine = lazy(() => import("./components/Telemedicine/Telemedicine"));
 const DailyLog = lazy(() => import("./components/DailyLog/DailyLog"));
 const Patients = lazy(() => import("./components/Patients/Patients"));
 const Appointments = lazy(() => import("./components/Appointments/Appointments"));
@@ -228,6 +229,7 @@ export default function App() {
           {view === "settings" && <Settings />}
           {view === "guide" && <Guide />}
           {view === "booking-setup" && <BookingSetup />}
+          {view === "telemedicine" && <Telemedicine />}
         </Suspense>
       </div>
     );
