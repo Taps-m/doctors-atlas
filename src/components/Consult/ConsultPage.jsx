@@ -112,7 +112,9 @@ export default function ConsultPage({ token }) {
   }
 
   const cancelled = data.status === "cancelled";
-  const over = !data.join_open && new Date(data.closes_at).getTime() < Date.now();
+  const waiting = !!data.waiting;
+  const over =
+    !waiting && !data.join_open && new Date(data.closes_at).getTime() < Date.now();
   const until = countdown(data.opens_at);
 
   return (
@@ -138,11 +140,26 @@ export default function ConsultPage({ token }) {
       </div>
 
       <div style={card}>
-        <span style={eyebrow}>Telemedicine consultation</span>
+        <span style={eyebrow}>
+          {waiting ? "Waiting room" : "Telemedicine consultation"}
+        </span>
         <p style={{ margin: "0 0 2px", fontSize: 15, color: MUTED }}>{data.patient_name}</p>
-        <p style={{ margin: 0, fontSize: 19, fontWeight: 800, color: INK }}>
-          {formatWhen(data.scheduled_at)}
-        </p>
+        {!waiting && (
+          <p style={{ margin: 0, fontSize: 19, fontWeight: 800, color: INK }}>
+            {formatWhen(data.scheduled_at)}
+          </p>
+        )}
+
+        {data.queue_code && !cancelled && !over && (
+          <div style={codeBox}>
+            <style>{CODE_KEYFRAMES}</style>
+            <span style={codeLabel}>Your code</span>
+            <span className="atlas-code" style={codeDigits}>
+              {data.queue_code}
+            </span>
+            <span style={codeHint}>The doctor will ask for this before starting.</span>
+          </div>
+        )}
 
         {cancelled ? (
           <Notice tone="warn">
@@ -153,6 +170,21 @@ export default function ConsultPage({ token }) {
             This consultation has finished. If you still need to be seen, please
             book again or call the clinic.
           </Notice>
+        ) : waiting ? (
+          <>
+            <div style={waitBox}>
+              <Clock size={17} style={{ color: TEAL, flexShrink: 0 }} />
+              <span>
+                {data.queue_position && data.queue_position > 1
+                  ? `You are number ${data.queue_position} in the queue.`
+                  : "You are next. The doctor will call you in shortly."}
+              </span>
+            </div>
+            <p style={{ ...body, marginTop: 10 }}>
+              Keep this page open — the Join button appears on its own when the
+              doctor is ready for you.
+            </p>
+          </>
         ) : data.join_open ? (
           <>
             <a href={data.room_url} target="_blank" rel="noopener noreferrer" style={joinBtn}>
@@ -236,6 +268,63 @@ function Notice({ tone, children }) {
     </p>
   );
 }
+
+const codeBox = {
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: 2,
+  marginTop: 16,
+  padding: "14px 12px",
+  borderRadius: 12,
+  background: "#f4f6fa",
+  border: "1px dashed #c8d2e2",
+};
+
+const codeLabel = {
+  fontSize: 11,
+  fontWeight: 800,
+  letterSpacing: ".12em",
+  textTransform: "uppercase",
+  color: MUTED,
+};
+
+const codeDigits = {
+  fontSize: 38,
+  fontWeight: 800,
+  letterSpacing: ".2em",
+  // The gradient is painted onto the glyphs themselves and swept
+  // left to right, so the code catches the eye without the digits
+  // ever moving - a number you have to read out has to stay still.
+  backgroundImage:
+    "linear-gradient(100deg, #15213b 0%, #15213b 32%, #f0a202 46%, #e2504c 54%, #15213b 70%, #15213b 100%)",
+  backgroundSize: "260% 100%",
+  WebkitBackgroundClip: "text",
+  backgroundClip: "text",
+  color: "transparent",
+  WebkitTextFillColor: "transparent",
+  fontVariantNumeric: "tabular-nums",
+  lineHeight: 1.15,
+  padding: "2px 0",
+};
+
+const CODE_KEYFRAMES = `
+@keyframes atlasCodeSweep {
+  0%   { background-position: 115% 0; }
+  100% { background-position: -15% 0; }
+}
+.atlas-code { animation: atlasCodeSweep 2.6s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .atlas-code {
+    animation: none;
+    background: none;
+    color: ${INK};
+    -webkit-text-fill-color: ${INK};
+  }
+}
+`;
+
+const codeHint = { fontSize: 12.5, color: MUTED, textAlign: "center" };
 
 const card = {
   background: "#fff",

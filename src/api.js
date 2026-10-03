@@ -202,6 +202,15 @@ export const api = {
     return request("/appointments");
   },
 
+  // The walk-in queue, doctor's side.
+  async listWaiting() {
+    return request("/appointments/waiting");
+  },
+
+  async admitPatient(id) {
+    return request(`/appointments/${id}/admit`, { method: "POST" });
+  },
+
   async addAppointment({ patientId, scheduledAt }) {
     return request("/appointments", {
       method: "POST",
@@ -329,6 +338,18 @@ export const api = {
 
   // The patient's own consultation page. No auth: the token in the
   // URL is the only credential, and it is scoped to one appointment.
+  async publicWaitingRoom(slug) {
+    return request(`/public/consult/room/${encodeURIComponent(slug)}`, { auth: false });
+  },
+
+  async joinWaitingRoom(slug, { name, phone }) {
+    return request(`/public/consult/room/${encodeURIComponent(slug)}/join`, {
+      method: "POST",
+      auth: false,
+      body: { name, phone: phone || null },
+    });
+  },
+
   async publicConsult(token) {
     return request(`/public/consult/${encodeURIComponent(token)}`, { auth: false });
   },

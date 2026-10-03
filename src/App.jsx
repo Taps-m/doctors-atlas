@@ -17,6 +17,7 @@ import { api } from "./api";
  */
 const PublicBooking = lazy(() => import("./components/PublicBooking/PublicBooking"));
 const ConsultPage = lazy(() => import("./components/Consult/ConsultPage"));
+const WaitingRoom = lazy(() => import("./components/Consult/WaitingRoom"));
 const BookingSetup = lazy(() => import("./components/BookingSetup/BookingSetup"));
 const Telemedicine = lazy(() => import("./components/Telemedicine/Telemedicine"));
 const DailyLog = lazy(() => import("./components/DailyLog/DailyLog"));
@@ -53,6 +54,16 @@ function publicBookingSlug() {
  * preserved here, unlike the slug above: the token is base64url and
  * lowercasing it would break every link.
  */
+/**
+ * The clinic's permanent walk-in address: /room/<slug>. Lowercased
+ * like the booking slug, unlike the consult token.
+ */
+function publicRoomSlug() {
+  const path = window.location.pathname.replace(/\/+$/, "").toLowerCase();
+  const m = path.match(/^\/room\/([a-z0-9-]{1,60})$/);
+  return m ? m[1] : null;
+}
+
 function publicConsultToken() {
   if (typeof window === "undefined") return null;
   const path = window.location.pathname.replace(/\/+$/, "");
@@ -74,6 +85,7 @@ export default function App() {
   // them, and this must be known before anything auth-related runs.
   const [bookingSlug] = useState(publicBookingSlug);
   const [consultToken] = useState(publicConsultToken);
+  const [roomSlug] = useState(publicRoomSlug);
   const [loggedIn, setLoggedIn] = useState(api.isLoggedIn());
   const [view, setView] = useState("dashboard");
   const [user, setUser] = useState(null);
@@ -108,10 +120,10 @@ export default function App() {
     // Skip entirely on a public booking link, even if a token happens to
     // be in this browser (a shared clinic phone, say) - a patient should
     // trigger no dashboard requests at all.
-    if (bookingSlug || consultToken) return;
+    if (bookingSlug || consultToken || roomSlug) return;
     if (loggedIn) refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loggedIn, bookingSlug, consultToken]);
+  }, [loggedIn, bookingSlug, consultToken, roomSlug]);
 
   function handleLoggedIn(role) {
     setLoggedIn(true);
@@ -164,6 +176,15 @@ export default function App() {
     return (
       <Suspense fallback={<PageLoading />}>
         <ConsultPage token={consultToken} />
+      </Suspense>
+    );
+  }
+
+  // The clinic's permanent walk-in room. Public, like the two above.
+  if (roomSlug) {
+    return (
+      <Suspense fallback={<PageLoading />}>
+        <WaitingRoom slug={roomSlug} />
       </Suspense>
     );
   }
