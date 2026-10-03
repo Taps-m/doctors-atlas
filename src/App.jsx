@@ -60,6 +60,9 @@ function publicBookingSlug() {
  */
 function publicRoomSlug() {
   const path = window.location.pathname.replace(/\/+$/, "").toLowerCase();
+  // A bare /room is the front-page shortcut: the backend resolves it
+  // to the clinic that owns this address.
+  if (path === "/room") return "_default";
   const m = path.match(/^\/room\/([a-z0-9-]{1,60})$/);
   return m ? m[1] : null;
 }

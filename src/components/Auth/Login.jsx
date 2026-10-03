@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Compass, TrendingUp, CalendarCheck, Sparkles } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Compass, TrendingUp, CalendarCheck, Sparkles, Video } from "lucide-react";
 import { api } from "../../api";
 import "./Auth.css";
 
@@ -212,6 +212,105 @@ export default function Login({ onLoggedIn }) {
           Doctors Atlas™ · doctorsatlas.in
         </p>
       </main>
+
+      <ConsultNowButton />
     </div>
   );
 }
+
+/**
+ * A patient who lands on doctorsatlas.in sees a doctor's login page,
+ * which is no use to them at all. This strip runs across the bottom,
+ * right to left, and takes them straight into the waiting room.
+ *
+ * It only appears once the backend confirms a clinic is actually
+ * taking video consultations, so it can never be a dead link. The
+ * scroll pauses on hover so it can be clicked without chasing it.
+ */
+function ConsultNowButton() {
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    api
+      .publicWaitingRoom("_default")
+      .then((r) => {
+        if (alive && r && r.open) setReady(true);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  if (!ready) return null;
+
+  return (
+    <>
+      <style>{CONSULT_FAB_CSS}</style>
+      <a href="/room" className="atlas-ticker" aria-label="See a doctor now by video">
+        <span className="atlas-ticker__track">
+          <span className="atlas-ticker__item">
+            <Video size={17} />
+            See a doctor now — start a video consultation
+            <span className="atlas-ticker__cta">Click here</span>
+          </span>
+          <span className="atlas-ticker__item" aria-hidden="true">
+            <Video size={17} />
+            See a doctor now — start a video consultation
+            <span className="atlas-ticker__cta">Click here</span>
+          </span>
+        </span>
+      </a>
+    </>
+  );
+}
+
+const CONSULT_FAB_CSS = `
+.atlas-ticker {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  display: block;
+  overflow: hidden;
+  text-decoration: none;
+  padding: 11px 0;
+  background: linear-gradient(90deg, #0f5d55 0%, #1a9e8f 50%, #0f5d55 100%);
+  box-shadow: 0 -6px 22px rgba(21,33,59,.18);
+}
+.atlas-ticker__track {
+  display: inline-flex;
+  white-space: nowrap;
+  will-change: transform;
+  animation: atlasTicker 18s linear infinite;
+}
+.atlas-ticker:hover .atlas-ticker__track { animation-play-state: paused; }
+.atlas-ticker__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 44px;
+  color: #fff;
+  font-weight: 800;
+  font-size: 15.5px;
+  letter-spacing: .01em;
+}
+.atlas-ticker__cta {
+  background: #fff;
+  color: #0f5d55;
+  border-radius: 999px;
+  padding: 3px 13px;
+  font-size: 13.5px;
+  font-weight: 800;
+}
+@keyframes atlasTicker {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .atlas-ticker__track { animation: none; }
+  .atlas-ticker { text-align: center; }
+}
+`;

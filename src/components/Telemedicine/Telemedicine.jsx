@@ -273,7 +273,7 @@ export default function Telemedicine() {
 
         <Card style={{ padding: "26px 22px" }}>
           <p style={{ margin: "0 0 22px", fontSize: 14.5, color: INK, lineHeight: 1.6 }}>
-            Three steps, once. After this, patients can pick a video appointment
+            Two steps, once. After this, patients can pick a video appointment
             when they book, and they appear on this page each morning.
           </p>
 
@@ -287,7 +287,7 @@ export default function Telemedicine() {
             </a>
           </Step>
 
-          <Step n={2} title="Paste the link here">
+          <Step n={2} title="Paste the link here" last>
             <p style={{ ...stepBody, marginBottom: 10 }}>
               Copy the address from your browser's address bar — it looks like
               meet.google.com/abc-defg-hij.
@@ -301,19 +301,6 @@ export default function Telemedicine() {
             />
           </Step>
 
-          <Step n={3} title="Add your registration number" last>
-            <p style={{ ...stepBody, marginBottom: 10 }}>
-              Shown to the patient so they know they're seeing a real doctor.
-              Optional, but expected for a remote consultation.
-            </p>
-            <input
-              value={regNo}
-              onChange={(e) => setRegNo(e.target.value)}
-              style={{ ...inputStyle, width: "100%", maxWidth: 240 }}
-              maxLength={60}
-              placeholder="e.g. WB-12345"
-            />
-          </Step>
 
           <button
             type="button"
@@ -427,7 +414,6 @@ export default function Telemedicine() {
               </div>
               <div style={{ fontSize: 13, color: MUTED, overflowWrap: "anywhere" }}>
                 {prettyRoom(savedRoom)}
-                {savedReg ? ` · Reg. ${savedReg}` : ""}
               </div>
             </div>
             <button type="button" onClick={() => setEditing(true)} style={btnGhost}>
@@ -443,13 +429,6 @@ export default function Telemedicine() {
               onChange={(e) => setRoomUrl(e.target.value)}
               style={{ ...inputStyle, width: "100%", maxWidth: 420, marginBottom: 16 }}
               maxLength={500}
-            />
-            <label style={labelStyle}>Registration number</label>
-            <input
-              value={regNo}
-              onChange={(e) => setRegNo(e.target.value)}
-              style={{ ...inputStyle, width: "100%", maxWidth: 240, marginBottom: 20 }}
-              maxLength={60}
             />
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
               <button
