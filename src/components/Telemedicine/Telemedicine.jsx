@@ -157,6 +157,15 @@ export default function Telemedicine() {
     }
   }, []);
 
+  const refreshQueue = useCallback(async () => {
+    try {
+      const rows = await api.listWaiting();
+      setWaitingList(Array.isArray(rows) ? rows : []);
+    } catch {
+      /* a failed poll is not worth shouting about; the next one retries */
+    }
+  }, []);
+
   useEffect(() => {
     load();
   }, [load]);
@@ -197,15 +206,6 @@ export default function Telemedicine() {
       setSaving(false);
     }
   }
-
-  const refreshQueue = useCallback(async () => {
-    try {
-      const rows = await api.listWaiting();
-      setWaitingList(Array.isArray(rows) ? rows : []);
-    } catch {
-      /* a failed poll is not worth shouting about; the next one retries */
-    }
-  }, []);
 
   async function admit(w) {
     setAdmitting(w.id);
